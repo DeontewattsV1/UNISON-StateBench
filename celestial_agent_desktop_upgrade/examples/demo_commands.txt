@@ -1,0 +1,7 @@
+MAKE FILE "spell.txt"
+WRITE "The orbit opens." TO "spell.txt"
+APPEND " The archive remembers." TO "spell.txt"
+MAKE FUNCTION "sum_two" LANG "python" ARGS "a, b" BODY "return a + b" TO "sum_two.py"
+READ FILE "spell.txt"
+LIST FILES
+HASH "TDD celestial prototype"
