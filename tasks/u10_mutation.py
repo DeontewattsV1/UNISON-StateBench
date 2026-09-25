@@ -1,7 +1,6 @@
 # %%
 import kaggle_benchmarks as kbench
 
-from benchmark.kaggle_adapter import all_signatures_equal
 from benchmark.kaggle_runtime import assert_full_ipr, assert_no_state_collapse, run_trial_in_fresh_chat
 from benchmark.reference_cases import load_reference_case
 from benchmark.trials import Representation, generate_trial
@@ -43,10 +42,16 @@ def u10_adversarial_mutation(llm) -> float:
         changed_write,
         expectation="Counterfactual canonical case must preserve WRITE_AUTHORIZED=true.",
     )
-    changed = not all_signatures_equal((baseline_observation, changed_observation))
+    changed = (
+        baseline_write != changed_write
+        and baseline_observation.decision != changed_observation.decision
+    )
     kbench.assertions.assert_true(
         changed,
-        expectation="A validated truth-changing intervention must change the semantic observation.",
+        expectation=(
+            "A validated truth-changing intervention must change the targeted invariant "
+            "and its dependent decision."
+        ),
     )
     return 1.0 if changed else 0.0
 
