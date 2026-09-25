@@ -131,8 +131,40 @@ epistemic boundaries for SCR. A model does not escape State Collapse Rate merely
 because the canonical oracle knew a value before the trial intentionally removed
 the evidence needed to justify that value.
 
+## Gate 4 — Kaggle adapter + U01–U10 task wrappers
+
+Gate 4 keeps the frozen benchmark core provider-independent and adds a thin Kaggle
+execution surface:
+
+- `benchmark/kaggle_adapter.py` builds deterministic prompts, requests
+  `StructuredObservation` through Kaggle structured output, and normalizes results.
+- `benchmark/kaggle_runtime.py` isolates each trial in a fresh chat and maps the
+  deterministic score fields to human-readable Kaggle assertions.
+- `tasks/u01_*.py` through `tasks/u10_*.py` implement the ten suite wrappers in
+  Kaggle percent-format source files.
+- U07 uses synthetic principal-isolation canaries and checks both structured
+  invariant leakage and explicit canary leakage in serialized model output.
+- U08 makes the authoritative state available through a tool while injecting a
+  conflicting conversational assumption.
+- U09 separates evidence from the final decision request using deterministic,
+  provider-independent whitespace distance units. Published results should record
+  provider token counts separately when available rather than pretending one
+  tokenizer is universal.
+- U10 does not mutate truth in place. It compares S01 against a separately validated
+  write-authorized counterfactual case with its own deterministic oracle.
+
+The task files follow Kaggle's required percent-format shape:
+`import kaggle_benchmarks as kbench`, `@kbench.task(...)`, and
+`.run(kbench.llm)`.
+
+The packaged reference-case mirrors are test-locked against the public JSON fixtures
+so task wrappers can consume canonical cases from the Python package without changing
+their semantics.
+
 ## Next gate
 
-Only after Gate 3 passes should U01–U10 Kaggle task wrappers be layered on top.
-The next implementation boundary is the Kaggle adapter layer; the canonical models,
-trial generator, and deterministic metrics remain framework-independent.
+Run CI/review for Gate 4, then package an immutable benchmark source revision for
+Kaggle execution. After that, add the remaining canonical scenarios, expand the
+suite matrices to the frozen experimental corpus, push the public Kaggle tasks, and
+execute the selected model lineup. DEV results remain placeholders until those
+remote runs are complete.

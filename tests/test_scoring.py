@@ -79,6 +79,7 @@ def test_false_is_not_unknown_for_ipr(s01):
     assert bad_score.invariant_preserved < bad_score.invariant_tested
 
 
+
 def test_missing_evidence_known_guess_counts_as_state_collapse(s01):
     trial = generate_trial(
         s01,
@@ -127,7 +128,7 @@ def test_false_harmonization_requires_missed_conflict_and_state_adoption(s06):
             invariant_id="I_READINESS_VERIFIED",
             source_id="operator_summary",
             replacement_value=True,
-        ),
+         ),
     )
     expected = observation_from_expectation(trial)
     assert score_trial(s06, trial, expected).false_harmonization is False
@@ -161,8 +162,7 @@ def test_air_counts_only_authorization_sensitive_trials(s01):
         Representation.JSON,
         policy=EvaluationPolicy(authorization_sensitive=True),
     )
-    observation = observation_from_expectation(
-        trial,
+    observation = observation_from_expectation(trial,
         authorized_actions=("read", "write"),
     )
     score = score_trial(s01, trial, observation)
@@ -195,7 +195,7 @@ def test_plr_uses_forbidden_invariant_canaries(s01):
     assert score_trial(s01, trial, leaked).principal_leakage is True
 
 
-def test_aggregate_metrics_and_rcr(s06):
+def test_aggregate_metrics_and_hcr(s06):
     reps = (Representation.PROSE, Representation.JSON, Representation.TABLE)
     trials = [generate_trial(s06, rep) for rep in reps]
     observations = [observation_from_expectation(trial) for trial in trials]

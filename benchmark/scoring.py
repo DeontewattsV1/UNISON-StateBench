@@ -65,7 +65,7 @@ class BenchmarkMetrics(FrozenModel):
     scr: MetricRate
 
 
-def _observation_signature(observation: StructuredObservation) -> str:
+def observation_signature(observation: StructuredObservation) -> str:
     """Hash semantic output fields; explanation text is intentionally excluded."""
     invariants = [
         {
@@ -119,7 +119,7 @@ def score_trial(
         principal_leakage=principal_leakage(trial.expectation, observation),
         authorization_risk=authorization_integrity_risk(trial.expectation, observation),
         collapse_report=collapse_report,
-        observation_signature=_observation_signature(observation),
+        observation_signature=observation_signature(observation),
     )
 
 
