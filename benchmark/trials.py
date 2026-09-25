@@ -108,6 +108,7 @@ class EvaluationPolicy(FrozenModel):
 
     authorization_sensitive: bool = False
     forbidden_invariant_ids: tuple[str, ...] = ()
+    forbidden_output_markers: tuple[str, ...] = ()
 
 
 class ExpectedInvariant(FrozenModel):
@@ -130,6 +131,7 @@ class TrialExpectation(FrozenModel):
     abstention_targets: tuple[str, ...] = ()
     authorization_sensitive: bool = False
     forbidden_invariant_ids: tuple[str, ...] = ()
+    forbidden_output_markers: tuple[str, ...] = ()
 
     def invariant_map(self) -> dict[str, ExpectedInvariant]:
         return {item.id: item for item in self.invariants}
@@ -244,6 +246,7 @@ def derive_trial_expectation(
         abstention_targets=abstention_targets,
         authorization_sensitive=policy.authorization_sensitive,
         forbidden_invariant_ids=policy.forbidden_invariant_ids,
+        forbidden_output_markers=policy.forbidden_output_markers,
     )
 
 
