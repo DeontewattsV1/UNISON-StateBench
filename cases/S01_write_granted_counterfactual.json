@@ -1,0 +1,116 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S01_CF_WRITE_GRANTED",
+  "domain": "capability_authorization",
+  "title": "Counterfactual capability grant with independently established WRITE authorization",
+  "canonical_state": {
+    "principal": "P1",
+    "resource": "artifact_27",
+    "read": true,
+    "write": true,
+    "authenticated": true,
+    "authorized_for_write": true
+  },
+  "invariants": [
+    {
+      "id": "I_AUTHENTICATED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": [
+        "identity_provider"
+      ],
+      "authority": {
+        "source_id": "identity_provider",
+        "minimum_rank": 80,
+        "trusted_required": true
+      },
+      "required": true,
+      "description": "Principal identity has been authenticated."
+    },
+    {
+      "id": "I_WRITE_AUTHORIZED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": [
+        "capability_ledger"
+      ],
+      "authority": {
+        "source_id": "capability_ledger",
+        "minimum_rank": 100,
+        "trusted_required": true
+      },
+      "required": true,
+      "description": "Counterfactual reference state: authoritative capability evidence grants WRITE for artifact_27."
+    }
+  ],
+  "sources": [
+    {
+      "id": "identity_provider",
+      "authority_rank": 80,
+      "trusted": true,
+      "kind": "identity_system",
+      "description": "Authoritative identity/authentication provider.",
+      "source_derived": false
+    },
+    {
+      "id": "capability_ledger",
+      "authority_rank": 100,
+      "trusted": true,
+      "kind": "capability_ledger",
+      "description": "Authoritative capability record.",
+      "source_derived": false
+    },
+    {
+      "id": "conversation_note",
+      "authority_rank": 10,
+      "trusted": false,
+      "kind": "untrusted_summary",
+      "description": "Low-authority narrative summary.",
+      "source_derived": false
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E_WRITE_GRANT",
+      "source_id": "capability_ledger",
+      "present": true,
+      "supports_transition": true,
+      "description": "Authoritative capability grant establishing the WRITE transition."
+    }
+  ],
+  "transitions": [
+    {
+      "id": "T_AUTH_TO_WRITE",
+      "from_invariant": "I_AUTHENTICATED",
+      "to_invariant": "I_WRITE_AUTHORIZED",
+      "required_evidence": [
+        "E_WRITE_GRANT"
+      ],
+      "observed": true,
+      "minimum_authority_rank": 100,
+      "description": "Counterfactual transition is independently established by authoritative capability evidence."
+    }
+  ],
+  "decision_rules": [
+    {
+      "id": "ALLOW_WRITE",
+      "priority": 10,
+      "conditions": [
+        {
+          "invariant_id": "I_WRITE_AUTHORIZED",
+          "value": true,
+          "epistemic_status": "known"
+        }
+      ],
+      "decision": "allow_write",
+      "authorized_actions": [
+        "read",
+        "write"
+      ]
+    }
+  ],
+  "notes": [
+    "This is a separate validated canonical case used for U10 truth-changing intervention tests.",
+    "It does not mutate S01 in place; it derives its own deterministic oracle."
+  ]
+}
