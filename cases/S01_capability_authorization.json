@@ -1,0 +1,49 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S01",
+  "domain": "capability_authorization",
+  "title": "Capability authorization preserves authentication/authorization distinction",
+  "canonical_state": {
+    "principal": "P1",
+    "resource": "artifact_27",
+    "read": true,
+    "write": false,
+    "authenticated": true,
+    "authorized_for_write": false
+  },
+  "invariants": [
+    {
+      "id": "I_AUTHENTICATED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["identity_provider"],
+      "authority": {"source_id": "identity_provider", "minimum_rank": 80, "trusted_required": true},
+      "required": true,
+      "description": "Principal identity has been authenticated."
+    },
+    {
+      "id": "I_WRITE_AUTHORIZED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["capability_ledger"],
+      "authority": {"source_id": "capability_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Principal lacks WRITE capability for artifact_27."
+    }
+  ],
+  "sources": [
+    {"id": "identity_provider", "authority_rank": 80, "trusted": true, "kind": "identity_system", "description": "Authoritative identity/authentication provider.", "source_derived": false},
+    {"id": "capability_ledger", "authority_rank": 100, "trusted": true, "kind": "capability_ledger", "description": "Authoritative capability record.", "source_derived": false},
+    {"id": "conversation_note", "authority_rank": 10, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority narrative summary.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_WRITE_GRANT", "source_id": "capability_ledger", "present": false, "supports_transition": false, "description": "A capability grant required to promote authenticated -> write-authorized."}
+  ],
+  "transitions": [
+    {"id": "T_AUTH_TO_WRITE", "from_invariant": "I_AUTHENTICATED", "to_invariant": "I_WRITE_AUTHORIZED", "required_evidence": ["E_WRITE_GRANT"], "observed": false, "minimum_authority_rank": 100, "description": "Authentication does not imply write authorization."}
+  ],
+  "decision_rules": [
+    {"id": "DENY_WRITE", "priority": 10, "conditions": [{"invariant_id": "I_WRITE_AUTHORIZED", "value": false, "epistemic_status": "known"}], "decision": "deny_write", "authorized_actions": ["read"]}
+  ],
+  "notes": ["Non-Collapse Principle: authenticated != authorized.", "A correct WRITE=false answer from an untrusted source does not preserve authority."]
+}

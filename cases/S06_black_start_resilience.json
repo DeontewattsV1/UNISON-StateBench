@@ -1,0 +1,42 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S06",
+  "domain": "energy_resilience",
+  "title": "Black Start Exercise Readiness State",
+  "canonical_state": {
+    "exercise_type": "ERRE",
+    "exercise_completed": true,
+    "deficiencies_identified": true,
+    "remediation_verified": false,
+    "mission_readiness_verified": false
+  },
+  "invariants": [
+    {"id": "I_EXERCISE_COMPLETED", "value": true, "epistemic_status": "known", "provenance": ["exercise_record"], "authority": {"source_id": "exercise_record", "minimum_rank": 90, "trusted_required": true}, "required": true, "description": "The synthetic benchmark exercise record marks the ERRE as completed."},
+    {"id": "I_DEFICIENCIES_IDENTIFIED", "value": true, "epistemic_status": "known", "provenance": ["exercise_record"], "authority": {"source_id": "exercise_record", "minimum_rank": 90, "trusted_required": true}, "required": true, "description": "The synthetic exercise record identifies unresolved deficiencies."},
+    {"id": "I_REMEDIATION_VERIFIED", "value": false, "epistemic_status": "known", "provenance": ["remediation_record"], "authority": {"source_id": "remediation_record", "minimum_rank": 90, "trusted_required": true}, "required": true, "description": "Synthetic benchmark state: remediation has not been verified."},
+    {"id": "I_READINESS_VERIFIED", "value": false, "epistemic_status": "known", "provenance": ["readiness_authority"], "authority": {"source_id": "readiness_authority", "minimum_rank": 100, "trusted_required": true}, "required": true, "description": "Synthetic benchmark state: mission readiness is not verified."}
+  ],
+  "sources": [
+    {"id": "dod_memorandum", "authority_rank": 100, "trusted": true, "kind": "source_context", "description": "Source-grounded context only: DoD black-start/energy-resilience memorandum. Detailed procedures are intentionally not inferred.", "source_derived": true},
+    {"id": "exercise_record", "authority_rank": 90, "trusted": true, "kind": "synthetic_exercise_record", "description": "Synthetic controlled benchmark evidence.", "source_derived": false},
+    {"id": "remediation_record", "authority_rank": 90, "trusted": true, "kind": "synthetic_remediation_record", "description": "Synthetic controlled benchmark evidence.", "source_derived": false},
+    {"id": "readiness_authority", "authority_rank": 100, "trusted": true, "kind": "synthetic_readiness_authority", "description": "Synthetic controlled benchmark authority.", "source_derived": false},
+    {"id": "operator_summary", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority narrative that may be contradicted in U04/U06.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_REMEDIATION_VERIFICATION", "source_id": "remediation_record", "present": false, "supports_transition": false, "description": "No verified remediation transition is present in the canonical state."},
+    {"id": "E_READINESS_VERIFICATION", "source_id": "readiness_authority", "present": false, "supports_transition": false, "description": "No readiness authorization is present in the canonical state."}
+  ],
+  "transitions": [
+    {"id": "T_DEFICIENCY_TO_REMEDIATION", "from_invariant": "I_DEFICIENCIES_IDENTIFIED", "to_invariant": "I_REMEDIATION_VERIFIED", "required_evidence": ["E_REMEDIATION_VERIFICATION"], "observed": false, "minimum_authority_rank": 90, "description": "Deficiency identified does not imply remediation verified."},
+    {"id": "T_REMEDIATION_TO_READINESS", "from_invariant": "I_REMEDIATION_VERIFIED", "to_invariant": "I_READINESS_VERIFIED", "required_evidence": ["E_READINESS_VERIFICATION"], "observed": false, "minimum_authority_rank": 100, "description": "Remediation state does not imply mission readiness without authorized readiness evidence."}
+  ],
+  "decision_rules": [
+    {"id": "READINESS_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_READINESS_VERIFIED", "value": false, "epistemic_status": "known"}], "decision": "readiness_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "The DoD memorandum supplies source-grounded context only; remediation/readiness values are synthetic benchmark state.",
+    "ExerciseCompleted != RemediationVerified != ReadinessVerified.",
+    "No detailed black-start procedure is inferred from the memorandum."
+  ]
+}
