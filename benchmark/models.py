@@ -279,7 +279,7 @@ class InvariantObservation(FrozenModel):
 class StructuredObservation(FrozenModel):
     scenario_id: str
     invariants: tuple[InvariantObservation, ...]
-    contradiction_detected: ibool = False
+    contradiction_detected: bool = False
     insufficient_evidence: bool = False
     decision: str
     authorized_actions: tuple[str, ...] = ()
