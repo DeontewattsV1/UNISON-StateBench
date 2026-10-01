@@ -1,0 +1,58 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S08",
+  "domain": "supply_chain_provenance",
+  "title": "Artifact receipt does not imply provenance admissibility",
+  "canonical_state": {
+    "artifact_received": true,
+    "hash_matches_ledger": false,
+    "artifact_admissible": false
+  },
+  "invariants": [
+    {
+      "id": "I_ARTIFACT_RECEIVED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["artifact_store"],
+      "authority": {"source_id": "artifact_store", "minimum_rank": 70, "trusted_required": true},
+      "required": true,
+      "description": "An artifact is present in the synthetic artifact store."
+    },
+    {
+      "id": "I_HASH_MATCHES_LEDGER",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["provenance_ledger"],
+      "authority": {"source_id": "provenance_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The artifact digest does not match the authoritative provenance ledger."
+    },
+    {
+      "id": "I_ARTIFACT_ADMISSIBLE",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["provenance_ledger"],
+      "authority": {"source_id": "provenance_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The artifact is not admissible under the synthetic provenance policy."
+    }
+  ],
+  "sources": [
+    {"id": "artifact_store", "authority_rank": 70, "trusted": true, "kind": "artifact_store", "description": "Synthetic artifact-presence record.", "source_derived": false},
+    {"id": "provenance_ledger", "authority_rank": 100, "trusted": true, "kind": "provenance_ledger", "description": "Authoritative synthetic provenance ledger.", "source_derived": false},
+    {"id": "package_note", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority note claiming the artifact is safe because it downloaded successfully.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_PROVENANCE_MATCH", "source_id": "provenance_ledger", "present": true, "supports_transition": false, "description": "Digest verification exists and reports a mismatch."}
+  ],
+  "transitions": [
+    {"id": "T_RECEIVED_TO_ADMISSIBLE", "from_invariant": "I_ARTIFACT_RECEIVED", "to_invariant": "I_ARTIFACT_ADMISSIBLE", "required_evidence": ["E_PROVENANCE_MATCH"], "observed": false, "minimum_authority_rank": 100, "description": "Presence does not imply provenance admissibility."}
+  ],
+  "decision_rules": [
+    {"id": "REJECT_ARTIFACT", "priority": 10, "conditions": [{"invariant_id": "I_ARTIFACT_ADMISSIBLE", "value": false, "epistemic_status": "known"}], "decision": "reject_artifact", "authorized_actions": []}
+  ],
+  "notes": [
+    "Artifact available != artifact provenance verified.",
+    "A successful transfer is not evidence of hash or provenance validity."
+  ]
+}
