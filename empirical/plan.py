@@ -49,7 +49,7 @@ class EmpiricalPlanItem(FrozenModel):
 
 
 class EmpiricalPlan(FrozenModel):
-    schema: str = "unison.empirical.plan.v1"
+    schema_id: str = Field(default="unison.empirical.plan.v1", alias="schema", serialization_alias="schema")
     version: str = "0.1.0"
     source_revision: str
     items: tuple[EmpiricalPlanItem, ...]
