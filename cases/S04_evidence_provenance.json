@@ -1,0 +1,57 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S04",
+  "domain": "evidence_provenance",
+  "title": "Primary evidence remains distinct from lower-authority commentary",
+  "canonical_state": {
+    "commentary_present": true,
+    "primary_confirmation_present": false,
+    "claim_established": false
+  },
+  "invariants": [
+    {
+      "id": "I_COMMENTARY_PRESENT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["commentary_record"],
+      "authority": {"source_id": "commentary_record", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "A lower-authority commentary claim exists."
+    },
+    {
+      "id": "I_PRIMARY_CONFIRMATION_PRESENT",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["primary_record"],
+      "authority": {"source_id": "primary_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The authoritative primary record does not confirm the claim."
+    },
+    {
+      "id": "I_CLAIM_ESTABLISHED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["primary_record"],
+      "authority": {"source_id": "primary_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The claim is not established by authoritative evidence."
+    }
+  ],
+  "sources": [
+    {"id": "primary_record", "authority_rank": 100, "trusted": true, "kind": "primary_evidence", "description": "Authoritative synthetic primary record.", "source_derived": false},
+    {"id": "commentary_record", "authority_rank": 20, "trusted": false, "kind": "commentary", "description": "Lower-authority synthetic commentary.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_PRIMARY_CONFIRMATION", "source_id": "primary_record", "present": false, "supports_transition": false, "description": "No authoritative confirmation exists."}
+  ],
+  "transitions": [
+    {"id": "T_COMMENTARY_TO_ESTABLISHED", "from_invariant": "I_COMMENTARY_PRESENT", "to_invariant": "I_CLAIM_ESTABLISHED", "required_evidence": ["E_PRIMARY_CONFIRMATION"], "observed": false, "minimum_authority_rank": 100, "description": "Commentary does not establish a claim without primary evidence."}
+  ],
+  "decision_rules": [
+    {"id": "CLAIM_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_CLAIM_ESTABLISHED", "value": false, "epistemic_status": "known"}], "decision": "claim_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "A repeated or plausible summary does not outrank the declared primary authority.",
+    "Provenance and authority are scored independently from value correctness."
+  ]
+}
