@@ -1,0 +1,49 @@
+{
+  "schema": "unison.freeze.v1",
+  "version": "0.1.0",
+  "status": "frozen",
+  "source_revision": {
+    "commit_sha": "df10125d05f8271c613213851214ad8d37554363",
+    "tree_sha": "d0a499dff542dd32ddc1fe5d08835b2f1da1b7f9",
+    "meaning": "This content-addressed Git revision is the immutable UNISON-StateBench v0.1 source freeze."
+  },
+  "verification": {
+    "github_actions_run_id": 36904010726,
+    "python": ["3.11", "3.12"],
+    "compileall": "pass",
+    "pytest": "pass"
+  },
+  "baseline_cases": {
+    "S01": {"path": "cases/S01_capability_authorization.json", "git_blob_sha": "2f55d1e271b7955d0b6f7d2a2893322de02a049a"},
+    "S02": {"path": "cases/S02_tool_execution.json", "git_blob_sha": "13597477cc3957b0ee4020da37e83025c7faa66a"},
+    "S03": {"path": "cases/S03_release_governance.json", "git_blob_sha": "68a4e53886c4bd740636cd3351249af050888d6d"},
+    "S04": {"path": "cases/S04_evidence_provenance.json", "git_blob_sha": "d190e6334b8440a302add6ed300a7430f50e4a7c"},
+    "S05": {"path": "cases/S05_scientific_experiment.json", "git_blob_sha": "4ae6ebe71572424c476c9d2244e34d2d8fff2ddf"},
+    "S06": {"path": "cases/S06_black_start_resilience.json", "git_blob_sha": "c8be69ad5ee1e3082e32e11d6da6e8a1dadf34d8"},
+    "S07": {"path": "cases/S07_data_retention.json", "git_blob_sha": "157700b76c0b492ea466b9ea1d82a79e8aab498d"},
+    "S08": {"path": "cases/S08_supply_chain.json", "git_blob_sha": "c2285af8b60e28bc4b0203f6edae994da225aebc"},
+    "S09": {"path": "cases/S09_approval_state.json", "git_blob_sha": "ba4a36ec9367af61f8d4180712125f066c2ddacc"},
+    "S10": {"path": "cases/S10_principal_isolation.json", "git_blob_sha": "bb1e4e7dfa583268cf4d2137ab7747182fbd9eb0"}
+  },
+  "corpus_manifest": {
+    "path": "cases/v0.1-corpus.json",
+    "git_blob_sha": "30f97b781bf1a6183c612b7f2523aa97c116d940"
+  },
+  "constitutional_core": {
+    "benchmark/models.py": "f5a8ea0ac46eaea758c12cd3242e6fc084a6e1ea",
+    "benchmark/oracle.py": "ff304fcdfed68ab71083b2feecf3a0cc695d29a8",
+    "benchmark/state_collapse.py": "4c9ba05e7a98cd51d2b58393a9be4d16d6e60502",
+    "benchmark/transform_guard.py": "8784b35d763a80e3c804f50a549926d90551e8dc"
+  },
+  "primary_metrics": ["IPR", "RCR", "CRR", "FHR", "CAL", "PLR", "AIR", "SCR"],
+  "composite_score": null,
+  "scientific_boundaries": [
+    "Consistency is distinct from correctness and state preservation.",
+    "Adjacent workflow states remain distinct unless required transition evidence is present.",
+    "False remains distinct from Unknown.",
+    "Renderer and mutation code may transform presentation evidence but may not mutate canonical truth or the deterministic oracle.",
+    "S06 source-derived DoD memorandum context remains separate from synthetic remediation and readiness state.",
+    "This source freeze does not establish that a model understands truth generally, nor does it establish deployment safety or arbitrary-agent containment.",
+    "UNISON-StateBench v0.1 defines no single composite leaderboard score."
+  ]
+}
