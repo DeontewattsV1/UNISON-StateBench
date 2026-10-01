@@ -27,13 +27,16 @@ The Non-Collapse Principle is first-class:
 ### Gate 1 — canonical truth + oracle
 
 - immutable canonical models and typed epistemic state
+- strict canonical JSON loading that rejects duplicate keys and non-finite numeric values
 - provenance/authority/evidence/transition types
+- explicit evidence requirements for state transitions
+- unique transition IDs and order-independent decision-rule priorities
 - deterministic oracle derivation
 - state-collapse detection
 - canonical/oracle integrity hashing
 - S01 capability-authorization fixture
 - S06 energy-resilience-readiness fixture
-- non-collapse and integrity tests
+- non-collapse, schema-hardening, and integrity tests
 
 ### Gate 2 — deterministic representation + guarded mutation
 
@@ -122,7 +125,7 @@ The five representation values are prose, JSON, YAML, table, and event_log. Muta
 Acceptance gate:
 
 ```text
-36 tests passed
+63 tests passed
 python -m compileall benchmark tasks analysis tests
 ```
 
