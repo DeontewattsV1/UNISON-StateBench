@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from pydantic import Field
+
 from benchmark.models import FrozenModel, StructuredObservation
 from benchmark.scoring import TrialScore
 
@@ -16,7 +18,7 @@ from .plan import EmpiricalPlanItem
 
 
 class EmpiricalRecord(FrozenModel):
-    schema: str = "unison.empirical.record.v1"
+    schema_id: str = Field(default="unison.empirical.record.v1", alias="schema", serialization_alias="schema")
     run_id: str
     model_id: str
     provider: str
@@ -26,7 +28,7 @@ class EmpiricalRecord(FrozenModel):
     prompt_sha256: str
     observation: StructuredObservation | None = None
     score: TrialScore | None = None
-    provider_metadata: dict[str, Any] = {}
+    provider_metadata: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None
     started_at: str
     completed_at: str
@@ -50,7 +52,7 @@ def append_jsonl(path: str | Path, record: EmpiricalRecord) -> None:
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(
-        record.model_dump(mode="json"),
+        record.model_dump(mode="json", by_alias=True),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
