@@ -1,0 +1,38 @@
+{
+  "schema": "unison.corpus.v1",
+  "version": "0.1.0",
+  "canonical_case_schema": "unison.case.v1",
+  "baseline_cases": [
+    "S01_capability_authorization.json",
+    "S02_tool_execution.json",
+    "S03_release_governance.json",
+    "S04_evidence_provenance.json",
+    "S05_scientific_experiment.json",
+    "S06_black_start_resilience.json",
+    "S07_data_retention.json",
+    "S08_supply_chain.json",
+    "S09_approval_state.json",
+    "S10_principal_isolation.json"
+  ],
+  "counterfactual_cases": [
+    "S01_write_granted_counterfactual.json"
+  ],
+  "primary_metrics": [
+    "IPR",
+    "RCR",
+    "CRR",
+    "FHR",
+    "CAL",
+    "PLR",
+    "AIR",
+    "SCR"
+  ],
+  "composite_score": null,
+  "scientific_claim": "UNISON-StateBench measures whether model outputs preserve explicitly defined value, epistemic status, provenance, authority, and operational-state distinctions under controlled representation and evidence transformations.",
+  "claim_boundaries": [
+    "The benchmark does not establish that a model understands truth in a general philosophical sense.",
+    "The benchmark does not establish arbitrary-agent containment or deployment safety.",
+    "S06 uses source-derived DoD memorandum context separately from synthetic exercise, remediation, and readiness state.",
+    "No single composite leaderboard score is defined for v0.1."
+  ]
+}
