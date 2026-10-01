@@ -1,0 +1,21 @@
+{
+  "schema": "unison.empirical.matrix-manifest.v1",
+  "version": "0.1.0",
+  "source_revision": "df10125d05f8271c613213851214ad8d37554363",
+  "plan_digest": "e1818b8a62d207fbce204b542a1c90e6d0525d223dc4e98a996b0c5e215d8619",
+  "model_calls_per_model": 162,
+  "suite_calls": {
+    "U01": 50,
+    "U02": 10,
+    "U03": 10,
+    "U04": 10,
+    "U05": 10,
+    "U06": 10,
+    "U07": 10,
+    "U08": 10,
+    "U09": 40,
+    "U10": 2
+  },
+  "matrix_semantics": "Deterministically regenerated from the protected v0.1 source bytes. The plan digest commits to all 162 ordered plan items.",
+  "u10_scope": "Only the pre-frozen S01 baseline/counterfactual pair is included."
+}
