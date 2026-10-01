@@ -27,4 +27,4 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.hatch.build.targets.wheel]
-packages = ["benchmark"]
+packages = ["benchmark", "empirical", "analysis"]
