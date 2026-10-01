@@ -25,6 +25,12 @@
     "S09": {"path": "cases/S09_approval_state.json", "git_blob_sha": "ba4a36ec9367af61f8d4180712125f066c2ddacc"},
     "S10": {"path": "cases/S10_principal_isolation.json", "git_blob_sha": "bb1e4e7dfa583268cf4d2137ab7747182fbd9eb0"}
   },
+  "counterfactual_cases": {
+    "S01_WRITE_GRANTED": {
+      "path": "cases/S01_write_granted_counterfactual.json",
+      "git_blob_sha": "83156393d5acd485f6c98ae95638880c5df1147c"
+    }
+  },
   "corpus_manifest": {
     "path": "cases/v0.1-corpus.json",
     "git_blob_sha": "30f97b781bf1a6183c612b7f2523aa97c116d940"
