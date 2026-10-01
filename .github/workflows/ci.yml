@@ -23,6 +23,22 @@ jobs:
       - name: Install
         run: python -m pip install -e '.[dev]'
       - name: Compile
-        run: python -m compileall -q benchmark tasks analysis tests
+        run: python -m compileall -q benchmark empirical tasks analysis scripts tests
+      - name: Build frozen empirical matrix
+        run: |
+          python scripts/build_v01_matrix.py \
+            --output /tmp/unison-v01-trial-matrix.jsonl \
+            --manifest /tmp/unison-v01-trial-matrix-manifest.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path("/tmp/unison-v01-trial-matrix-manifest.json").read_text())
+          assert manifest["model_calls_per_model"] == 162
+          assert manifest["suite_calls"] == {
+              "U01": 50, "U02": 10, "U03": 10, "U04": 10, "U05": 10,
+              "U06": 10, "U07": 10, "U08": 10, "U09": 40, "U10": 2,
+          }
+          print(json.dumps(manifest, sort_keys=True))
+          PY
       - name: Test
         run: python -m pytest -q
