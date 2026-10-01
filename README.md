@@ -122,13 +122,6 @@ A trial expectation is separate from the immutable canonical oracle. This is ess
 
 The five representation values are prose, JSON, YAML, table, and event_log. MutationPlan is presentation-only and supports none, reorder, paraphrase, contradiction, missing evidence, authority conflict, and adversarial corruption. A truth-changing U10 intervention is deliberately not a MutationPlan; it must construct a separate validated CanonicalCase and derive a new oracle.
 
-Acceptance gate:
-
-```text
-63 tests passed
-python -m compileall benchmark tasks analysis tests
-```
-
 The scoring path also treats presentation-induced UNKNOWN/ABSENT states as
 epistemic boundaries for SCR. A model does not escape State Collapse Rate merely
 because the canonical oracle knew a value before the trial intentionally removed
@@ -156,18 +149,62 @@ execution surface:
 - U10 does not mutate truth in place. It compares S01 against a separately validated
   write-authorized counterfactual case with its own deterministic oracle.
 
-The task files follow Kaggle's required percent-format shape:
-`import kaggle_benchmarks as kbench`, `@kbench.task(...)`, and
-`.run(kbench.llm)`.
+## Gate 5 — frozen empirical execution
 
-The packaged reference-case mirrors are test-locked against the public JSON fixtures
-so task wrappers can consume canonical cases from the Python package without changing
-their semantics.
+The empirical layer is pinned to source commit
+`df10125d05f8271c613213851214ad8d37554363`.
 
-## Next gate
+Before constructing or executing any trial, the freeze guard verifies Git blob identity
+for S01-S10, the frozen S01 U10 counterfactual, the corpus manifest, and the
+constitutional core. A changed protected byte fails closed.
 
-Run CI/review for Gate 4, then package an immutable benchmark source revision for
-Kaggle execution. After that, add the remaining canonical scenarios, expand the
-suite matrices to the frozen experimental corpus, push the public Kaggle tasks, and
-execute the selected model lineup. DEV results remain placeholders until those
-remote runs are complete.
+The deterministic v0.1 execution plan contains **162 model calls per model**:
+
+- U01: 50
+- U02: 10
+- U03: 10
+- U04: 10
+- U05: 10
+- U06: 10
+- U07: 10
+- U08: 10
+- U09: 40
+- U10: 2
+
+U10 remains scoped to the already-frozen S01 baseline/counterfactual pair. The
+empirical phase does not create new truth-changing cases after the source freeze.
+
+Raw structured observations are written to per-model append-only JSONL files and
+fsync'd after each record. A result manifest hashes those files after execution.
+Analysis computes the eight metrics separately, a 95% scenario-cluster percentile
+bootstrap (10,000 resamples by default), U09 distance curves, and failure topology
+across suite, scenario, representation, invariant component, and state-collapse kind.
+
+RCR is intentionally computed from U01 representation-equivalence trials rather than
+being contaminated by repeated U09 distance observations.
+
+Generate the plan:
+
+```bash
+python scripts/build_v01_matrix.py
+```
+
+Analyze complete result files:
+
+```bash
+python scripts/analyze_v01_results.py raw-results/*.jsonl
+```
+
+Exact Kaggle model identifiers are resolved and recorded at execution time from the
+runtime's available-model mapping. The runner refuses missing requested keys rather
+than silently substituting a different model.
+
+## Scientific boundary
+
+This repository supplies an executable evaluation artifact. It does not establish
+that a model understands truth in a general philosophical sense, does not establish
+arbitrary-agent containment or deployment safety, and does not combine
+IPR/RCR/CRR/FHR/CAL/PLR/AIR/SCR into a single composite score.
+
+The frozen empirical source and execution notes are under `releases/` and
+`experiments/v0.1/`.
