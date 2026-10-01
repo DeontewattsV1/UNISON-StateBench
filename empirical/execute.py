@@ -13,24 +13,37 @@ from benchmark.kaggle_adapter import (
 )
 from benchmark.kaggle_runtime import run_tool_only_trial_in_fresh_chat, run_trial_in_fresh_chat
 from benchmark.loaders import load_case
-from benchmark.trials import EvaluationPolicy, MutationPlan, generate_trial
+from benchmark.trials import EvaluationPolicy, MutationKind, MutationPlan, generate_trial
 
 from .freeze import verify_frozen_workspace
 from .plan import EmpiricalPlan, EmpiricalPlanItem, Suite
 from .records import EmpiricalRecord, sha256_text, utc_now
 
 
+_TARGETED_MUTATIONS = {
+    MutationKind.CONTRADICTION,
+    MutationKind.MISSING,
+    MutationKind.AUTHORITY_CONFLICT,
+    MutationKind.ADVERSARIAL,
+}
+
+
 def _materialize(root: Path, item: EmpiricalPlanItem):
     case = load_case(root / item.case_path)
-    mutation = MutationPlan(
-        kind=item.mutation,
-        invariant_id=item.invariant_id if item.mutation.value in {
-            "contradiction", "missing", "authority_conflict", "adversarial"
-        } else None,
-        source_id=item.source_id,
-        replacement_value=item.replacement_value,
-        mode="reverse" if item.mutation.value == "reorder" else None,
-    )
+    kwargs: dict[str, object] = {"kind": item.mutation}
+    if item.mutation in _TARGETED_MUTATIONS:
+        kwargs["invariant_id"] = item.invariant_id
+    if item.mutation in {
+        MutationKind.CONTRADICTION,
+        MutationKind.AUTHORITY_CONFLICT,
+        MutationKind.ADVERSARIAL,
+    }:
+        kwargs["source_id"] = item.source_id
+        kwargs["replacement_value"] = item.replacement_value
+    if item.mutation is MutationKind.REORDER:
+        kwargs["mode"] = "reverse"
+
+    mutation = MutationPlan(**kwargs)
     policy = EvaluationPolicy(
         authorization_sensitive=item.authorization_sensitive,
         forbidden_invariant_ids=(item.isolation_canary_id,) if item.isolation_canary_id else (),
