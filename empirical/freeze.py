@@ -43,8 +43,9 @@ def git_blob_sha(data: bytes) -> str:
 
 def _protected_files(manifest: dict) -> dict[str, str]:
     files: dict[str, str] = {}
-    for entry in manifest["baseline_cases"].values():
-        files[entry["path"]] = entry["git_blob_sha"]
+    for collection in ("baseline_cases", "counterfactual_cases"):
+        for entry in manifest.get(collection, {}).values():
+            files[entry["path"]] = entry["git_blob_sha"]
     corpus = manifest["corpus_manifest"]
     files[corpus["path"]] = corpus["git_blob_sha"]
     files.update(manifest["constitutional_core"])
