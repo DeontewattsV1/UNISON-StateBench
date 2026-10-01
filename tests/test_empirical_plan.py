@@ -1,4 +1,5 @@
 from collections import Counter
+import json
 from pathlib import Path
 
 from empirical.freeze import FREEZE_SOURCE_REVISION, verify_frozen_workspace
@@ -24,6 +25,9 @@ def test_v01_empirical_plan_is_deterministic_and_complete():
     assert first.source_revision == FREEZE_SOURCE_REVISION
     assert first.plan_digest == second.plan_digest
     assert first.model_calls == 162
+    frozen = json.loads((ROOT / "experiments" / "v0.1" / "trial-matrix-manifest.json").read_text(encoding="utf-8"))
+    assert first.plan_digest == frozen["plan_digest"]
+    assert first.source_revision == frozen["source_revision"]
     assert len({item.plan_id for item in first.items}) == 162
 
     counts = Counter(item.suite.value for item in first.items)
