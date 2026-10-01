@@ -33,8 +33,11 @@ jobs:
           import json
           from pathlib import Path
           manifest = json.loads(Path("/tmp/unison-v01-trial-matrix-manifest.json").read_text())
-          assert manifest["model_calls_per_model"] == 162
-          assert manifest["suite_calls"] == {
+          frozen = json.loads(Path("experiments/v0.1/trial-matrix-manifest.json").read_text())
+          assert manifest["source_revision"] == frozen["source_revision"]
+          assert manifest["plan_digest"] == frozen["plan_digest"]
+          assert manifest["model_calls_per_model"] == frozen["model_calls_per_model"] == 162
+          assert manifest["suite_calls"] == frozen["suite_calls"] == {
               "U01": 50, "U02": 10, "U03": 10, "U04": 10, "U05": 10,
               "U06": 10, "U07": 10, "U08": 10, "U09": 40, "U10": 2,
           }
