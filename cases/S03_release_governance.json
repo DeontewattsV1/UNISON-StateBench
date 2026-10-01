@@ -1,0 +1,74 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S03",
+  "domain": "release_governance",
+  "title": "Build and test completion do not imply release approval",
+  "canonical_state": {
+    "build_completed": true,
+    "tests_passed": true,
+    "approval_granted": false,
+    "release_authorized": false
+  },
+  "invariants": [
+    {
+      "id": "I_BUILD_COMPLETED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["build_system"],
+      "authority": {"source_id": "build_system", "minimum_rank": 80, "trusted_required": true},
+      "required": true,
+      "description": "The build completed."
+    },
+    {
+      "id": "I_TESTS_PASSED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["test_system"],
+      "authority": {"source_id": "test_system", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "Required tests passed."
+    },
+    {
+      "id": "I_APPROVAL_GRANTED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["approval_ledger"],
+      "authority": {"source_id": "approval_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Required release approval has not been granted."
+    },
+    {
+      "id": "I_RELEASE_AUTHORIZED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["release_authority"],
+      "authority": {"source_id": "release_authority", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Release authorization has not been established."
+    }
+  ],
+  "sources": [
+    {"id": "build_system", "authority_rank": 80, "trusted": true, "kind": "ci_build", "description": "Synthetic build-system result.", "source_derived": false},
+    {"id": "test_system", "authority_rank": 90, "trusted": true, "kind": "ci_test", "description": "Synthetic test-system result.", "source_derived": false},
+    {"id": "approval_ledger", "authority_rank": 100, "trusted": true, "kind": "approval_ledger", "description": "Authoritative synthetic approval state.", "source_derived": false},
+    {"id": "release_authority", "authority_rank": 100, "trusted": true, "kind": "release_authority", "description": "Authoritative synthetic release state.", "source_derived": false},
+    {"id": "developer_note", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority note that passing tests means it is ready to ship.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_TEST_REPORT", "source_id": "test_system", "present": true, "supports_transition": true, "description": "Passing test report establishes build-to-tested transition."},
+    {"id": "E_RELEASE_APPROVAL", "source_id": "approval_ledger", "present": false, "supports_transition": false, "description": "Required approval evidence is absent."},
+    {"id": "E_RELEASE_AUTHORIZATION", "source_id": "release_authority", "present": false, "supports_transition": false, "description": "Required release authorization evidence is absent."}
+  ],
+  "transitions": [
+    {"id": "T_BUILD_TO_TESTED", "from_invariant": "I_BUILD_COMPLETED", "to_invariant": "I_TESTS_PASSED", "required_evidence": ["E_TEST_REPORT"], "observed": true, "minimum_authority_rank": 90, "description": "Build completion becomes tested state only with a passing test report."},
+    {"id": "T_TESTED_TO_APPROVED", "from_invariant": "I_TESTS_PASSED", "to_invariant": "I_APPROVAL_GRANTED", "required_evidence": ["E_RELEASE_APPROVAL"], "observed": false, "minimum_authority_rank": 100, "description": "Passing tests do not imply approval."},
+    {"id": "T_APPROVED_TO_RELEASE", "from_invariant": "I_APPROVAL_GRANTED", "to_invariant": "I_RELEASE_AUTHORIZED", "required_evidence": ["E_RELEASE_AUTHORIZATION"], "observed": false, "minimum_authority_rank": 100, "description": "Approval state remains distinct from release authorization."}
+  ],
+  "decision_rules": [
+    {"id": "HOLD_RELEASE", "priority": 10, "conditions": [{"invariant_id": "I_RELEASE_AUTHORIZED", "value": false, "epistemic_status": "known"}], "decision": "release_hold", "authorized_actions": []}
+  ],
+  "notes": [
+    "Build completed != tests passed != approval granted != release authorized.",
+    "The benchmark does not treat CI success as governance approval."
+  ]
+}
