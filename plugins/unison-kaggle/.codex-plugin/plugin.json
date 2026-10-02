@@ -1,0 +1,11 @@
+{
+  "name": "unison-kaggle",
+  "version": "0.1.0",
+  "description": "Run the frozen UNISON-StateBench v0.1 empirical workflow through Kaggle's official MCP server.",
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json",
+  "interface": {
+    "displayName": "UNISON Kaggle",
+    "shortDescription": "Run UNISON empirical evaluation through Kaggle"
+  }
+}
