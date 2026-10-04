@@ -1,0 +1,68 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "M02",
+  "domain": "game_theory_equilibrium",
+  "title": "Curve intersection remains distinct from verified Nash equilibrium",
+  "canonical_state": {
+    "expected_payoff_expression_present": true,
+    "strategy_curves_intersect": true,
+    "all_best_responses_verified": false,
+    "nash_equilibrium_established": null
+  },
+  "invariants": [
+    {
+      "id": "I_EXPECTED_PAYOFF_EXPRESSION_PRESENT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["game_model"],
+      "authority": {"source_id": "game_model", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "Expected payoff is represented as a probability-weighted sum."
+    },
+    {
+      "id": "I_STRATEGY_CURVES_INTERSECT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["equilibrium_illustration"],
+      "authority": {"source_id": "equilibrium_illustration", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "The illustration contains intersecting strategy curves."
+    },
+    {
+      "id": "I_ALL_BEST_RESPONSES_VERIFIED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["best_response_record"],
+      "authority": {"source_id": "best_response_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The record does not verify the Nash inequality for every player and permitted deviation."
+    },
+    {
+      "id": "I_NASH_EQUILIBRIUM_ESTABLISHED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["best_response_record"],
+      "authority": {"source_id": "best_response_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Nash equilibrium is not established from intersection geometry alone."
+    }
+  ],
+  "sources": [
+    {"id": "game_model", "authority_rank": 90, "trusted": true, "kind": "formal_model", "description": "Formal expected-payoff model.", "source_derived": false},
+    {"id": "equilibrium_illustration", "authority_rank": 20, "trusted": false, "kind": "conceptual_illustration", "description": "Visual intersection labeled as an equilibrium.", "source_derived": false},
+    {"id": "best_response_record", "authority_rank": 100, "trusted": true, "kind": "equilibrium_verification", "description": "Required verification of every player's best-response inequalities.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_ALL_BEST_RESPONSES", "source_id": "best_response_record", "present": false, "supports_transition": false, "description": "No complete best-response verification is present."}
+  ],
+  "transitions": [
+    {"id": "T_INTERSECTION_TO_NASH", "from_invariant": "I_STRATEGY_CURVES_INTERSECT", "to_invariant": "I_NASH_EQUILIBRIUM_ESTABLISHED", "required_evidence": ["E_ALL_BEST_RESPONSES"], "observed": false, "minimum_authority_rank": 100, "description": "Curve intersection does not establish Nash equilibrium without best-response verification."}
+  ],
+  "decision_rules": [
+    {"id": "EQUILIBRIUM_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_NASH_EQUILIBRIUM_ESTABLISHED", "value": null, "epistemic_status": "unknown"}], "decision": "equilibrium_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "Expected payoff requires a coherent probability model; expectation is not a complete downside-risk measure.",
+    "The Nash condition must hold for every player and permitted unilateral deviation."
+  ]
+}
