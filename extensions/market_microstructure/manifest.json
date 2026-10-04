@@ -1,0 +1,15 @@
+{
+  "schema": "unison.extension.market-microstructure.v1",
+  "status": "experimental",
+  "included_in_unison_v0_1": false,
+  "cases": [
+    "M01_signal_vs_alpha.json",
+    "M02_equilibrium_condition.json",
+    "M03_kyle_price_impact.json",
+    "M04_spread_optimality.json",
+    "M05_integrated_auction_state.json"
+  ],
+  "existing_primary_metrics": ["IPR", "RCR", "CRR", "FHR", "CAL", "PLR", "AIR", "SCR"],
+  "new_primary_metrics": [],
+  "scientific_boundary": "The extension evaluates preservation of model conditionality, provenance, assumptions, units, and state transitions. It does not assert alpha, equilibrium, universal price impact, optimal spreads, or trading profitability."
+}
