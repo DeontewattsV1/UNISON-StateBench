@@ -1,16 +1,13 @@
 import json
+from hashlib import sha1
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from benchmark.metrics.state_collapse import collapse_counts
 from benchmark.models import EpistemicStatus
-from benchmark.oracle import derive_typed_oracle
-from benchmark.state_collapse import (
-    CollapseKind,
-    StateCollapse,
-    detect_typed_state_collapses,
-)
+from benchmark.state_collapse import CollapseKind
 from benchmark.typed_noncollapse import (
     CertificateKind,
     CertificateResult,
@@ -20,13 +17,24 @@ from benchmark.typed_noncollapse import (
     RelationFact,
     RelationObservation,
     RelationType,
+    TypedCollapseKind,
     TypedObservation,
+    TypedStateCollapse,
+    TypedStateCollapseReport,
+    derive_typed_oracle,
+    detect_typed_state_collapses,
     load_typed_fixture,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTENSION = ROOT / "extensions" / "typed_noncollapse"
 FIXTURES = EXTENSION / "fixtures"
+
+
+def _git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    header = f"blob {len(data)}\0".encode("ascii")
+    return sha1(header + data).hexdigest()
 
 
 def test_extension_is_excluded_from_frozen_v01_and_adds_no_primary_metric():
@@ -38,24 +46,29 @@ def test_extension_is_excluded_from_frozen_v01_and_adds_no_primary_metric():
     assert "AP_SAT_01.json" not in frozen_text
 
 
-def test_state_collapse_supports_typed_subject_without_breaking_legacy_subject():
-    legacy = StateCollapse(
-        kind=CollapseKind.UNSUPPORTED_TRANSITION,
-        invariant_id="I_WRITE_AUTHORIZED",
-        boundary_id="T_AUTH_TO_WRITE",
-        message="legacy invariant boundary",
+def test_typed_extension_preserves_frozen_core_bytes():
+    assert _git_blob_sha(ROOT / "benchmark" / "oracle.py") == "ff304fcdfed68ab71083b2feecf3a0cc695d29a8"
+    assert _git_blob_sha(ROOT / "benchmark" / "state_collapse.py") == "4c9ba05e7a98cd51d2b58393a9be4d16d6e60502"
+
+
+def test_typed_report_adapts_into_existing_scr_counting_path():
+    report = TypedStateCollapseReport(
+        scenario_id="AP-REL-01",
+        boundary_trials=1,
+        collapses=(
+            TypedStateCollapse(
+                kind=TypedCollapseKind.RELATION_SUBSTITUTION,
+                subject_id="R_REACH_1TO1",
+                boundary_id="BRIDGE:I_T_TO_REACH",
+                diagnostic_code="REL.I_T_TO_REACH",
+                message="missing bridge",
+            ),
+        ),
     )
-    typed = StateCollapse(
-        kind=CollapseKind.RELATION_SUBSTITUTION,
-        subject_id="R_REACH_1TO1",
-        boundary_id="BRIDGE:I_T_TO_REACH",
-        diagnostic_code="REL.I_T_TO_REACH",
-        message="typed relation boundary",
-    )
-    assert legacy.invariant_id == "I_WRITE_AUTHORIZED"
-    assert legacy.subject_id is None
-    assert typed.invariant_id is None
-    assert typed.subject_id == "R_REACH_1TO1"
+    legacy = report.to_state_collapse_report()
+    assert collapse_counts(legacy) == (1, 1)
+    assert legacy.collapses[0].kind is CollapseKind.UNSUPPORTED_TRANSITION
+    assert legacy.collapses[0].invariant_id == "TYPED:R_REACH_1TO1"
 
 
 def test_reachability_requires_horizon_and_process_signature():
@@ -92,8 +105,9 @@ def test_ap_rel_01_detects_unlicensed_relation_bridge():
     report = detect_typed_state_collapses(fixture, observation)
     assert report.boundary_trials == 1
     assert report.count == 1
-    assert report.collapses[0].kind is CollapseKind.RELATION_SUBSTITUTION
+    assert report.collapses[0].kind is TypedCollapseKind.RELATION_SUBSTITUTION
     assert report.collapses[0].diagnostic_code == "REL.I_T_TO_REACH"
+    assert collapse_counts(report.to_state_collapse_report()) == (1, 1)
 
 
 def test_ap_rel_01_explicit_bridge_evidence_prevents_relation_collapse():
@@ -117,7 +131,7 @@ def test_ap_sat_01_separates_saturation_viability_and_unknown_event_time():
     fixture = load_typed_fixture(FIXTURES / "AP_SAT_01.json")
     oracle = derive_typed_oracle(fixture)
     certificates = oracle.certificate_vector.certificate_map()
-    params = fixture.parameter_map()
+    params = oracle.parameter_map()
 
     assert certificates[CertificateKind.ANTAGONISTIC_ABSORPTION].status is CertificateStatus.FAIL
     assert certificates[CertificateKind.VIABILITY].status is CertificateStatus.PASS
@@ -147,5 +161,6 @@ def test_ap_sat_01_separates_saturation_viability_and_unknown_event_time():
     assert report.boundary_trials == 2
     assert report.count == 2
     by_code = {item.diagnostic_code: item for item in report.collapses}
-    assert by_code["BND.SAT_EQ_EXIT"].kind is CollapseKind.BOUNDARY_SUBSTITUTION
-    assert by_code["BND.TIME_WITHOUT_TRAJECTORY"].kind is CollapseKind.UNKNOWN_TO_KNOWN
+    assert by_code["BND.SAT_EQ_EXIT"].kind is TypedCollapseKind.BOUNDARY_SUBSTITUTION
+    assert by_code["BND.TIME_WITHOUT_TRAJECTORY"].kind is TypedCollapseKind.UNKNOWN_TO_KNOWN
+    assert collapse_counts(report.to_state_collapse_report()) == (2, 2)

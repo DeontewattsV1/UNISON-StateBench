@@ -77,9 +77,9 @@ Diagnostics: `BND.SAT_EQ_EXIT` and `BND.TIME_WITHOUT_TRAJECTORY`.
 
 ## Integration boundary
 
-- `benchmark/oracle.py` gains `derive_typed_oracle()` without changing `derive_oracle()`.
-- `benchmark/state_collapse.py` gains typed collapse kinds and `detect_typed_state_collapses()` without changing the frozen detector's semantics.
-- Typed failures reuse `StateCollapseReport`, so SCR remains the headline state-collapse metric.
+- Frozen `benchmark/oracle.py` and `benchmark/state_collapse.py` bytes remain unchanged.
+- `benchmark/typed_noncollapse.py` owns `derive_typed_oracle()`, typed bridge detection, and typed diagnostic codes.
+- `TypedStateCollapseReport.to_state_collapse_report()` projects typed failures into the existing `StateCollapseReport` counting interface, so SCR remains the headline state-collapse metric without changing frozen v0.1 semantics.
 - The extension does not alter U01-U10 or `cases/v0.1-corpus.json`.
 
 Novelty and empirical validity are not established by these fixtures. They are adversarial reasoning tests for typed relation preservation.
