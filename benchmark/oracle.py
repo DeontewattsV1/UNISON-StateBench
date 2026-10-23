@@ -96,3 +96,21 @@ def derive_oracle(case: CanonicalCase) -> OracleResult:
         authorized_actions=rule.authorized_actions,
         transitions=transition_states,
     )
+
+
+def derive_typed_oracle(fixture):
+    """Derive the post-v0.1 typed relation/certificate oracle.
+
+    This hook is additive and does not alter ``derive_oracle`` or the frozen
+    v0.1 canonical-case semantics.
+    """
+    from .typed_noncollapse import TypedFixture, TypedOracleResult
+
+    if not isinstance(fixture, TypedFixture):
+        fixture = TypedFixture.model_validate(fixture)
+    return TypedOracleResult(
+        scenario_id=fixture.scenario_id,
+        relations=fixture.relations,
+        certificate_vector=fixture.certificate_vector,
+        claims=fixture.claims,
+    )

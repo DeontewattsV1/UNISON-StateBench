@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Mapping
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .models import CanonicalCase, EpistemicStatus, FrozenModel, StructuredObservation
 from .oracle import derive_oracle, transition_is_satisfied
@@ -14,13 +14,24 @@ from .oracle import derive_oracle, transition_is_satisfied
 class CollapseKind(str, Enum):
     UNSUPPORTED_TRANSITION = "unsupported_transition"
     UNKNOWN_TO_KNOWN = "unknown_to_known"
+    RELATION_SUBSTITUTION = "relation_substitution"
+    CERTIFICATE_SUBSTITUTION = "certificate_substitution"
+    BOUNDARY_SUBSTITUTION = "boundary_substitution"
 
 
 class StateCollapse(FrozenModel):
     kind: CollapseKind
-    invariant_id: str
+    invariant_id: str | None = None
+    subject_id: str | None = None
     boundary_id: str
+    diagnostic_code: str | None = None
     message: str
+
+    @model_validator(mode="after")
+    def require_subject(self) -> "StateCollapse":
+        if self.invariant_id is None and self.subject_id is None:
+            raise ValueError("state collapse requires invariant_id or subject_id")
+        return self
 
 
 class StateCollapseReport(FrozenModel):
@@ -117,6 +128,135 @@ def detect_state_collapses(
     boundary_trials = len(case.transitions) + len(epistemic_boundaries)
     return StateCollapseReport(
         scenario_id=case.scenario_id,
+        boundary_trials=boundary_trials,
+        collapses=tuple(collapses),
+    )
+
+
+def _typed_collapse_kind(family):
+    from .typed_noncollapse import BridgeFamily
+
+    if family is BridgeFamily.RELATION:
+        return CollapseKind.RELATION_SUBSTITUTION
+    if family is BridgeFamily.BOUNDARY:
+        return CollapseKind.BOUNDARY_SUBSTITUTION
+    return CollapseKind.CERTIFICATE_SUBSTITUTION
+
+
+def detect_typed_state_collapses(fixture, observation) -> StateCollapseReport:
+    """Detect unlicensed typed relation/certificate substitutions.
+
+    The typed extension reuses ``StateCollapseReport`` so SCR remains the
+    headline metric. It does not modify the frozen v0.1 detector above.
+    """
+    from .oracle import derive_typed_oracle
+    from .typed_noncollapse import TypedFixture, TypedObservation
+
+    if not isinstance(fixture, TypedFixture):
+        fixture = TypedFixture.model_validate(fixture)
+    if not isinstance(observation, TypedObservation):
+        observation = TypedObservation.model_validate(observation)
+    if observation.scenario_id != fixture.scenario_id:
+        raise ValueError("Observation scenario_id does not match typed fixture")
+
+    oracle = derive_typed_oracle(fixture)
+    expected_relations = oracle.relation_map()
+    observed_relations = observation.relation_map()
+    expected_certificates = oracle.certificate_vector.certificate_map()
+    observed_certificates = observation.certificate_vector.certificate_map()
+    observed_claims = observation.claim_map()
+    supplied_evidence = set(observation.evidence_ids)
+    collapses: list[StateCollapse] = []
+
+    for bridge in fixture.relation_bridges:
+        target = observed_relations.get(bridge.target_relation_id)
+        if target is None:
+            continue
+        if target.epistemic_status is not EpistemicStatus.KNOWN or target.value is not True:
+            continue
+
+        sources_hold = all(
+            expected_relations[source_id].epistemic_status is EpistemicStatus.KNOWN
+            and expected_relations[source_id].value is True
+            for source_id in bridge.source_relation_ids
+        )
+        expected_target = expected_relations[bridge.target_relation_id]
+        target_already_true = (
+            expected_target.epistemic_status is EpistemicStatus.KNOWN
+            and expected_target.value is True
+        )
+        bridge_present = set(bridge.required_evidence_ids).issubset(supplied_evidence)
+
+        if sources_hold and not target_already_true and not bridge_present:
+            collapses.append(
+                StateCollapse(
+                    kind=_typed_collapse_kind(bridge.family),
+                    subject_id=bridge.target_relation_id,
+                    boundary_id=bridge.id,
+                    diagnostic_code=bridge.diagnostic_code,
+                    message=(
+                        f"Observed {bridge.target_relation_id}=true from typed source "
+                        f"relations without required bridge evidence."
+                    ),
+                )
+            )
+
+    for bridge in fixture.certificate_bridges:
+        source = expected_certificates.get(bridge.source_kind)
+        expected_target = expected_certificates.get(bridge.target_kind)
+        target = observed_certificates.get(bridge.target_kind)
+        if source is None or expected_target is None or target is None:
+            continue
+
+        bridge_present = set(bridge.required_evidence_ids).issubset(supplied_evidence)
+        target_already_expected = expected_target.status is bridge.target_status
+        if (
+            source.status is bridge.source_status
+            and target.status is bridge.target_status
+            and not target_already_expected
+            and not bridge_present
+        ):
+            collapses.append(
+                StateCollapse(
+                    kind=_typed_collapse_kind(bridge.family),
+                    subject_id=bridge.target_kind.value,
+                    boundary_id=bridge.id,
+                    diagnostic_code=bridge.diagnostic_code,
+                    message=(
+                        f"Observed certificate {bridge.target_kind.value}="
+                        f"{bridge.target_status.value} without required bridge evidence "
+                        f"from {bridge.source_kind.value}."
+                    ),
+                )
+            )
+
+    epistemic_trials = 0
+    for claim in oracle.claims:
+        if claim.epistemic_status not in {EpistemicStatus.UNKNOWN, EpistemicStatus.ABSENT}:
+            continue
+        epistemic_trials += 1
+        observed_claim = observed_claims.get(claim.id)
+        if observed_claim is not None and observed_claim.epistemic_status is EpistemicStatus.KNOWN:
+            collapses.append(
+                StateCollapse(
+                    kind=CollapseKind.UNKNOWN_TO_KNOWN,
+                    subject_id=claim.id,
+                    boundary_id=f"EPISTEMIC:{claim.id}",
+                    diagnostic_code=claim.diagnostic_code,
+                    message=(
+                        f"Observed a known value for typed claim {claim.id} although the "
+                        f"justified epistemic status is {claim.epistemic_status.value}."
+                    ),
+                )
+            )
+
+    boundary_trials = (
+        len(fixture.relation_bridges)
+        + len(fixture.certificate_bridges)
+        + epistemic_trials
+    )
+    return StateCollapseReport(
+        scenario_id=fixture.scenario_id,
         boundary_trials=boundary_trials,
         collapses=tuple(collapses),
     )
