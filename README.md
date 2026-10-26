@@ -1,5 +1,7 @@
 # UNISON-StateBench v0.1
 
+**Author:** Deonté O'dell Watts / GoodShyt Group Inc. (GitHub: [DeontewattsV1](https://github.com/DeontewattsV1), ORCID: [0009-0005-8586-3650](https://orcid.org/0009-0005-8586-3650))
+
 > **Naming:** UNISON is the underlying research/framework identity. UNISON-StateBench is the public benchmark artifact and implementation.
 
 UNISON-StateBench evaluates whether an AI system preserves explicitly defined invariants across representation changes, provenance/authority conflicts, missing evidence, and state transitions.
