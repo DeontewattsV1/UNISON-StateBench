@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-  { name = "Deonté O'dell Watts / GoodShyt Group Inc." }
+  { name = "Deonte Watts" }
 ]
 dependencies = [
   "pydantic>=2.8,<3",
