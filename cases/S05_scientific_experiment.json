@@ -1,0 +1,60 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S05",
+  "domain": "scientific_experiment",
+  "title": "Observed measurement does not imply hypothesis confirmation",
+  "canonical_state": {
+    "measurement_observed": true,
+    "analysis_completed": true,
+    "hypothesis_confirmed": false
+  },
+  "invariants": [
+    {
+      "id": "I_MEASUREMENT_OBSERVED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["instrument_record"],
+      "authority": {"source_id": "instrument_record", "minimum_rank": 80, "trusted_required": true},
+      "required": true,
+      "description": "A synthetic measurement was observed."
+    },
+    {
+      "id": "I_ANALYSIS_COMPLETED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["analysis_record"],
+      "authority": {"source_id": "analysis_record", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The predefined synthetic analysis completed."
+    },
+    {
+      "id": "I_HYPOTHESIS_CONFIRMED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["analysis_record"],
+      "authority": {"source_id": "analysis_record", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The analysis does not establish the hypothesis."
+    }
+  ],
+  "sources": [
+    {"id": "instrument_record", "authority_rank": 80, "trusted": true, "kind": "measurement_record", "description": "Synthetic measurement source.", "source_derived": false},
+    {"id": "analysis_record", "authority_rank": 90, "trusted": true, "kind": "analysis_record", "description": "Synthetic authoritative analysis result.", "source_derived": false},
+    {"id": "research_note", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority note interpreting observation as confirmation.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_ANALYSIS_COMPLETION", "source_id": "analysis_record", "present": true, "supports_transition": true, "description": "Analysis record establishes measurement-to-analysis transition."},
+    {"id": "E_HYPOTHESIS_CONFIRMATION", "source_id": "analysis_record", "present": true, "supports_transition": false, "description": "Analysis result does not support hypothesis confirmation."}
+  ],
+  "transitions": [
+    {"id": "T_MEASUREMENT_TO_ANALYSIS", "from_invariant": "I_MEASUREMENT_OBSERVED", "to_invariant": "I_ANALYSIS_COMPLETED", "required_evidence": ["E_ANALYSIS_COMPLETION"], "observed": true, "minimum_authority_rank": 90, "description": "Observed data becomes an analyzed result only with a completed analysis record."},
+    {"id": "T_ANALYSIS_TO_CONFIRMATION", "from_invariant": "I_ANALYSIS_COMPLETED", "to_invariant": "I_HYPOTHESIS_CONFIRMED", "required_evidence": ["E_HYPOTHESIS_CONFIRMATION"], "observed": false, "minimum_authority_rank": 90, "description": "Completed analysis does not imply hypothesis confirmation."}
+  ],
+  "decision_rules": [
+    {"id": "HYPOTHESIS_NOT_CONFIRMED", "priority": 10, "conditions": [{"invariant_id": "I_HYPOTHESIS_CONFIRMED", "value": false, "epistemic_status": "known"}], "decision": "hypothesis_not_confirmed", "authorized_actions": []}
+  ],
+  "notes": [
+    "This is a synthetic scientific-state fixture, not a claim about a real experiment.",
+    "Measurement observed != hypothesis confirmed."
+  ]
+}

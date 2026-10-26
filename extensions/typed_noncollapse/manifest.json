@@ -1,0 +1,14 @@
+{
+  "schema": "unison.extension.typed-noncollapse.v1",
+  "status": "experimental",
+  "included_in_unison_v0_1": false,
+  "fixtures": [
+    "fixtures/AP_REL_01.json",
+    "fixtures/AP_SAT_01.json"
+  ],
+  "constitutional_axiom": "Preserve the relation type, not merely the value.",
+  "bridge_rule": "No relation or certificate substitutes for another without an explicit bridge condition and required evidence.",
+  "existing_primary_metrics": ["IPR", "RCR", "CRR", "FHR", "CAL", "PLR", "AIR", "SCR"],
+  "new_primary_metrics": [],
+  "scientific_boundary": "This extension evaluates typed non-collapse behavior. It does not establish a new physical law, baryogenesis mechanism, or scalar Unison score."
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S07",
+  "domain": "data_retention",
+  "title": "Retention deadline does not imply verified deletion",
+  "canonical_state": {
+    "deletion_deadline_passed": true,
+    "deletion_requested": true,
+    "deletion_verified": false
+  },
+  "invariants": [
+    {
+      "id": "I_DELETION_DEADLINE_PASSED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["retention_policy"],
+      "authority": {"source_id": "retention_policy", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The synthetic retention deadline has passed."
+    },
+    {
+      "id": "I_DELETION_REQUESTED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["deletion_queue"],
+      "authority": {"source_id": "deletion_queue", "minimum_rank": 80, "trusted_required": true},
+      "required": true,
+      "description": "A deletion request was queued."
+    },
+    {
+      "id": "I_DELETION_VERIFIED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["deletion_ledger"],
+      "authority": {"source_id": "deletion_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "No authoritative deletion verification exists."
+    }
+  ],
+  "sources": [
+    {"id": "retention_policy", "authority_rank": 90, "trusted": true, "kind": "policy_record", "description": "Synthetic retention policy record.", "source_derived": false},
+    {"id": "deletion_queue", "authority_rank": 80, "trusted": true, "kind": "request_queue", "description": "Synthetic deletion-request queue.", "source_derived": false},
+    {"id": "deletion_ledger", "authority_rank": 100, "trusted": true, "kind": "deletion_ledger", "description": "Authoritative synthetic deletion-verification ledger.", "source_derived": false},
+    {"id": "operator_note", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority note assuming expired data must already be gone.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_DELETION_REQUEST", "source_id": "deletion_queue", "present": true, "supports_transition": true, "description": "Queue record establishes deadline-to-request transition."},
+    {"id": "E_DELETION_RECEIPT", "source_id": "deletion_ledger", "present": false, "supports_transition": false, "description": "No deletion receipt is present."}
+  ],
+  "transitions": [
+    {"id": "T_DEADLINE_TO_REQUEST", "from_invariant": "I_DELETION_DEADLINE_PASSED", "to_invariant": "I_DELETION_REQUESTED", "required_evidence": ["E_DELETION_REQUEST"], "observed": true, "minimum_authority_rank": 80, "description": "Deadline passage is distinct from an actual deletion request."},
+    {"id": "T_REQUEST_TO_VERIFIED_DELETE", "from_invariant": "I_DELETION_REQUESTED", "to_invariant": "I_DELETION_VERIFIED", "required_evidence": ["E_DELETION_RECEIPT"], "observed": false, "minimum_authority_rank": 100, "description": "Deletion requested does not imply deletion verified."}
+  ],
+  "decision_rules": [
+    {"id": "DELETION_UNVERIFIED", "priority": 10, "conditions": [{"invariant_id": "I_DELETION_VERIFIED", "value": false, "epistemic_status": "known"}], "decision": "deletion_unverified", "authorized_actions": []}
+  ],
+  "notes": [
+    "Deadline passed != deletion requested != deletion verified.",
+    "The fixture evaluates state preservation, not legal compliance."
+  ]
+}

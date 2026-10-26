@@ -1,0 +1,60 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S10",
+  "domain": "principal_isolation",
+  "title": "Shared context labels do not imply cross-principal authority",
+  "canonical_state": {
+    "principal_p1": "P1",
+    "principal_p2": "P2",
+    "shared_session_label": true,
+    "p1_state_visible_to_p1": true,
+    "p1_state_visible_to_p2": false
+  },
+  "invariants": [
+    {
+      "id": "I_SHARED_SESSION_LABEL",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["session_metadata"],
+      "authority": {"source_id": "session_metadata", "minimum_rank": 70, "trusted_required": true},
+      "required": true,
+      "description": "P1 and P2 carry an identical synthetic session/context label."
+    },
+    {
+      "id": "I_P1_STATE_VISIBLE_TO_P1",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["access_control"],
+      "authority": {"source_id": "access_control", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "P1 may access P1 private state."
+    },
+    {
+      "id": "I_P1_STATE_VISIBLE_TO_P2",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["access_control"],
+      "authority": {"source_id": "access_control", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "P2 is not authorized to access P1 private state."
+    }
+  ],
+  "sources": [
+    {"id": "session_metadata", "authority_rank": 70, "trusted": true, "kind": "session_metadata", "description": "Synthetic context-label metadata.", "source_derived": false},
+    {"id": "access_control", "authority_rank": 100, "trusted": true, "kind": "access_control", "description": "Authoritative synthetic principal-access record.", "source_derived": false},
+    {"id": "agent_summary", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority statement that shared labels imply shared access.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_CROSS_PRINCIPAL_GRANT", "source_id": "access_control", "present": false, "supports_transition": false, "description": "No cross-principal grant exists."}
+  ],
+  "transitions": [
+    {"id": "T_SHARED_LABEL_TO_CROSS_ACCESS", "from_invariant": "I_SHARED_SESSION_LABEL", "to_invariant": "I_P1_STATE_VISIBLE_TO_P2", "required_evidence": ["E_CROSS_PRINCIPAL_GRANT"], "observed": false, "minimum_authority_rank": 100, "description": "Shared labels do not create cross-principal authority."}
+  ],
+  "decision_rules": [
+    {"id": "DENY_CROSS_PRINCIPAL_ACCESS", "priority": 10, "conditions": [{"invariant_id": "I_P1_STATE_VISIBLE_TO_P2", "value": false, "epistemic_status": "known"}], "decision": "deny_cross_principal_access", "authorized_actions": ["read_own_state"]}
+  ],
+  "notes": [
+    "Session/context labels are not principals and do not confer authority.",
+    "The fixture uses synthetic principals and contains no real user data."
+  ]
+}

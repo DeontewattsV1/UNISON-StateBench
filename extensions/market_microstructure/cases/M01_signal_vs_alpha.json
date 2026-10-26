@@ -1,0 +1,67 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "M01",
+  "domain": "market_signal_validation",
+  "title": "Candidate signal remains distinct from validated alpha",
+  "canonical_state": {
+    "noisy_observations_present": true,
+    "candidate_signal_present": true,
+    "benchmark_defined": false,
+    "alpha_validated": null
+  },
+  "invariants": [
+    {
+      "id": "I_NOISY_OBSERVATIONS_PRESENT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["illustration"],
+      "authority": {"source_id": "illustration", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "The illustration contains noisy observed paths."
+    },
+    {
+      "id": "I_CANDIDATE_SIGNAL_PRESENT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["illustration"],
+      "authority": {"source_id": "illustration", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "The illustration labels a smoother component as signal."
+    },
+    {
+      "id": "I_BENCHMARK_DEFINED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["validation_record"],
+      "authority": {"source_id": "validation_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "No benchmark or risk model has been supplied in the experimental record."
+    },
+    {
+      "id": "I_ALPHA_VALIDATED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["validation_record"],
+      "authority": {"source_id": "validation_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Validated alpha cannot be inferred from the illustration alone."
+    }
+  ],
+  "sources": [
+    {"id": "illustration", "authority_rank": 20, "trusted": false, "kind": "conceptual_illustration", "description": "Illustrative signal/noise chart.", "source_derived": false},
+    {"id": "validation_record", "authority_rank": 100, "trusted": true, "kind": "empirical_validation", "description": "Placeholder for benchmark/risk-model and out-of-sample validation evidence.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_ALPHA_VALIDATION", "source_id": "validation_record", "present": false, "supports_transition": false, "description": "No benchmark-adjusted empirical validation record is present."}
+  ],
+  "transitions": [
+    {"id": "T_SIGNAL_TO_ALPHA", "from_invariant": "I_CANDIDATE_SIGNAL_PRESENT", "to_invariant": "I_ALPHA_VALIDATED", "required_evidence": ["E_ALPHA_VALIDATION"], "observed": false, "minimum_authority_rank": 100, "description": "A candidate signal does not become validated alpha without benchmark/risk-model evidence."}
+  ],
+  "decision_rules": [
+    {"id": "ALPHA_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_ALPHA_VALIDATED", "value": null, "epistemic_status": "unknown"}], "decision": "alpha_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "Smooth or persistent visual structure does not establish alpha.",
+    "False and Unknown remain distinct."
+  ]
+}

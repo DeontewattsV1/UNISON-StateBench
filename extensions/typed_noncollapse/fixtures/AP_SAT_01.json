@@ -1,0 +1,52 @@
+{
+  "schema_version": "unison.typed-noncollapse.v1",
+  "scenario_id": "AP-SAT-01",
+  "relations": [
+    {
+      "id": "R_BASELINE_VIABLE",
+      "relation_type": "baseline_viability",
+      "subject": "system",
+      "object": "V",
+      "value": true,
+      "epistemic_status": "known",
+      "horizon": "static-band"
+    }
+  ],
+  "certificate_vector": {
+    "certificates": [
+      {"kind": "C_ANTAGONISM", "status": "fail"},
+      {"kind": "C_V", "status": "pass"}
+    ]
+  },
+  "certificate_bridges": [
+    {
+      "id": "BRIDGE:SAT_TO_EXIT",
+      "source_kind": "C_ANTAGONISM",
+      "source_status": "fail",
+      "target_kind": "C_V",
+      "target_status": "fail",
+      "required_evidence_ids": ["E_VIABILITY_EXIT"],
+      "diagnostic_code": "BND.SAT_EQ_EXIT",
+      "family": "boundary"
+    }
+  ],
+  "claims": [
+    {
+      "id": "CL_TAU_EQUAL",
+      "value": null,
+      "epistemic_status": "unknown",
+      "reason_code": "BND.TIME_REQUIRES_TRAJECTORY",
+      "diagnostic_code": "BND.TIME_WITHOUT_TRAJECTORY"
+    }
+  ],
+  "parameters": [
+    {"id": "B_PERFECT_LOW", "value": -1.0},
+    {"id": "B_PERFECT_HIGH", "value": 3.0},
+    {"id": "B_VIABLE_LOW", "value": -1.35},
+    {"id": "B_VIABLE_HIGH", "value": 3.35}
+  ],
+  "notes": [
+    "The fixture is static unless an input trajectory u(t) is supplied.",
+    "Saturation is loss of perfect absorption, not automatic viability failure."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "M03",
+  "domain": "market_microstructure_price_impact",
+  "title": "Kyle-style price impact remains conditional on its model assumptions",
+  "canonical_state": {
+    "linear_pricing_rule_assumed": true,
+    "single_auction_kyle_assumptions_declared": true,
+    "lambda_formula_model_derived": true,
+    "universal_transfer_validated": null
+  },
+  "invariants": [
+    {
+      "id": "I_LINEAR_PRICING_RULE_ASSUMED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["kyle_model"],
+      "authority": {"source_id": "kyle_model", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The model assumes P_t = P_0 + lambda Q_t."
+    },
+    {
+      "id": "I_KYLE_ASSUMPTIONS_DECLARED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["kyle_model"],
+      "authority": {"source_id": "kyle_model", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The scenario explicitly declares the single-auction Kyle assumptions and variance meanings."
+    },
+    {
+      "id": "I_LAMBDA_FORMULA_MODEL_DERIVED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["kyle_derivation"],
+      "authority": {"source_id": "kyle_derivation", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Within the declared model, lambda = 1/2 sqrt(Sigma_v / Sigma_u) is treated as the derived coefficient."
+    },
+    {
+      "id": "I_UNIVERSAL_TRANSFER_VALIDATED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["external_validation"],
+      "authority": {"source_id": "external_validation", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The model coefficient has not been validated as a universal law or for arbitrary trading settings."
+    }
+  ],
+  "sources": [
+    {"id": "kyle_model", "authority_rank": 90, "trusted": true, "kind": "model_assumption", "description": "Declared linear pricing and single-auction model assumptions.", "source_derived": false},
+    {"id": "kyle_derivation", "authority_rank": 100, "trusted": true, "kind": "model_derivation", "description": "Conditional model derivation of lambda.", "source_derived": false},
+    {"id": "external_validation", "authority_rank": 100, "trusted": true, "kind": "empirical_transfer_validation", "description": "Evidence needed to transfer the result outside the declared model.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_EXTERNAL_TRANSFER", "source_id": "external_validation", "present": false, "supports_transition": false, "description": "No external transfer validation is present."}
+  ],
+  "transitions": [
+    {"id": "T_MODEL_RESULT_TO_UNIVERSAL_TRANSFER", "from_invariant": "I_LAMBDA_FORMULA_MODEL_DERIVED", "to_invariant": "I_UNIVERSAL_TRANSFER_VALIDATED", "required_evidence": ["E_EXTERNAL_TRANSFER"], "observed": false, "minimum_authority_rank": 100, "description": "A conditional model result does not become a universal empirical law without external validation."}
+  ],
+  "decision_rules": [
+    {"id": "CONDITIONAL_RESULT_ONLY", "priority": 10, "conditions": [{"invariant_id": "I_UNIVERSAL_TRANSFER_VALIDATED", "value": null, "epistemic_status": "unknown"}], "decision": "conditional_model_result_only", "authorized_actions": []}
+  ],
+  "notes": [
+    "Higher lambda means greater price impact and lower depth within the model interpretation.",
+    "Model applicability must be checked before transferring the coefficient."
+  ]
+}
