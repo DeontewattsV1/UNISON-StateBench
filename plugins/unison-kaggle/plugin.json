@@ -1,0 +1,30 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "unison-kaggle",
+  "version": "0.1.0",
+  "description": "Run the frozen UNISON-StateBench v0.1 empirical workflow through Kaggle's official MCP server without modifying the benchmark oracle or corpus.",
+  "author": {
+    "name": "Deonte Watts",
+    "email": "deonte@goodshyt.fun",
+    "url": "https://github.com/DeontewattsV1"
+  },
+  "homepage": "https://github.com/DeontewattsV1/UNISON-StateBench",
+  "repository": "https://github.com/DeontewattsV1/UNISON-StateBench",
+  "license": "MIT",
+  "keywords": [
+    "kaggle",
+    "benchmarks",
+    "evaluation",
+    "unison",
+    "mcp"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "UNISON Kaggle",
+        "shortDescription": "Run UNISON empirical evaluation through Kaggle",
+        "longDescription": "Connects the UNISON-StateBench workflow to Kaggle's official MCP server. It snapshots the live Kaggle benchmark model catalog, freezes an exact model lineup, runs the frozen 162-call-per-model plan, preserves raw structured observations, and computes the eight UNISON metrics with confidence intervals and failure topology."
+      }
+    }
+  }
+}

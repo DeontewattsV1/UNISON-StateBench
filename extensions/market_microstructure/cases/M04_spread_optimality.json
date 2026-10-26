@@ -1,0 +1,67 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "M04",
+  "domain": "execution_cost_model",
+  "title": "Candidate spread formula remains distinct from proven optimal spread",
+  "canonical_state": {
+    "spread_formula_proposed": true,
+    "objective_defined": false,
+    "units_defined": false,
+    "optimality_proven": null
+  },
+  "invariants": [
+    {
+      "id": "I_SPREAD_FORMULA_PROPOSED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["spread_claim"],
+      "authority": {"source_id": "spread_claim", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "The expression spread* = 2(c + lambda sigma sqrt(T)) is proposed."
+    },
+    {
+      "id": "I_OBJECTIVE_DEFINED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["derivation_record"],
+      "authority": {"source_id": "derivation_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "No optimization objective is specified."
+    },
+    {
+      "id": "I_UNITS_DEFINED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["derivation_record"],
+      "authority": {"source_id": "derivation_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The units of sigma relative to lambda and T are not defined."
+    },
+    {
+      "id": "I_OPTIMALITY_PROVEN",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["derivation_record"],
+      "authority": {"source_id": "derivation_record", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Optimality is not established by the formula alone."
+    }
+  ],
+  "sources": [
+    {"id": "spread_claim", "authority_rank": 20, "trusted": false, "kind": "unverified_formula", "description": "Candidate spread expression shown without derivation.", "source_derived": false},
+    {"id": "derivation_record", "authority_rank": 100, "trusted": true, "kind": "optimization_derivation", "description": "Required objective, variable definitions, unit consistency, and derivation.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_OPTIMALITY_DERIVATION", "source_id": "derivation_record", "present": false, "supports_transition": false, "description": "No derivation proving optimality is present."}
+  ],
+  "transitions": [
+    {"id": "T_FORMULA_TO_OPTIMUM", "from_invariant": "I_SPREAD_FORMULA_PROPOSED", "to_invariant": "I_OPTIMALITY_PROVEN", "required_evidence": ["E_OPTIMALITY_DERIVATION"], "observed": false, "minimum_authority_rank": 100, "description": "A proposed spread formula does not become an optimum without an objective and derivation."}
+  ],
+  "decision_rules": [
+    {"id": "OPTIMALITY_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_OPTIMALITY_PROVEN", "value": null, "epistemic_status": "unknown"}], "decision": "spread_optimality_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "If lambda has units price/quantity, sigma must be compatible with quantity/sqrt(time) for lambda sigma sqrt(T) to have price units.",
+    "If sigma instead denotes price volatility, dimensional justification is missing under the same lambda definition."
+  ]
+}

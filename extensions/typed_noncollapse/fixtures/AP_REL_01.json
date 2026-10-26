@@ -1,0 +1,56 @@
+{
+  "schema_version": "unison.typed-noncollapse.v1",
+  "scenario_id": "AP-REL-01",
+  "relations": [
+    {
+      "id": "R_MASS",
+      "relation_type": "invariant_equivalence",
+      "subject": "electron",
+      "object": "positron",
+      "value": true,
+      "epistemic_status": "known",
+      "evidence_ids": ["E_MASS"]
+    },
+    {
+      "id": "R_C_EDGE",
+      "relation_type": "transformation_edge",
+      "subject": "electron",
+      "object": "positron",
+      "value": true,
+      "epistemic_status": "known",
+      "evidence_ids": ["E_CHARGE_CONJUGATION"]
+    },
+    {
+      "id": "R_REACH_1TO1",
+      "relation_type": "reachability",
+      "subject": "electron",
+      "object": "positron",
+      "value": false,
+      "epistemic_status": "known",
+      "horizon": "finite",
+      "process_signature": "isolated:1->1",
+      "evidence_ids": ["E_CHARGE_CONSERVATION"]
+    }
+  ],
+  "relation_bridges": [
+    {
+      "id": "BRIDGE:I_T_TO_REACH",
+      "source_relation_ids": ["R_MASS", "R_C_EDGE"],
+      "target_relation_id": "R_REACH_1TO1",
+      "required_evidence_ids": ["E_ADMISSIBLE_1TO1_PROCESS"],
+      "obstruction_evidence_ids": ["E_CHARGE_CONSERVATION"],
+      "diagnostic_code": "REL.I_T_TO_REACH",
+      "family": "relation"
+    }
+  ],
+  "certificate_vector": {
+    "certificates": [
+      {"kind": "C_I", "status": "pass"},
+      {"kind": "C_Q", "status": "not_applicable"}
+    ]
+  },
+  "notes": [
+    "Mass invariance and charge-conjugation edge do not license isolated 1->1 reachability.",
+    "Electric charge conservation is an obstruction, not the missing bridge certificate."
+  ]
+}
