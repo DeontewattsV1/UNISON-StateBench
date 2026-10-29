@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+playwright-report/
+test-results/
+*.log
+coverage/
+*.zip
+private-research/
+.release/
+.wrangler/
+worker/generated-assets.mjs
+worker-configuration.d.ts

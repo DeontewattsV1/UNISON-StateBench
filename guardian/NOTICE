@@ -1,0 +1,8 @@
+UNISON Guardian
+Copyright 2026 Deonte Watts
+
+The newly written Guardian source is licensed under the Apache License, Version 2.0.
+This license does not include or relicense separately supplied confidential research
+archives, private fixtures, outreach records, or the separate UNISON-StateBench project.
+Third-party dependencies remain subject to their respective licenses.
+Bundled runtime dependency licenses are included in public/third-party-notices.txt.
