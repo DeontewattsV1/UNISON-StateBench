@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — HATS expansion
+
+- Add an interactive Macro/Meso/Micro/Nano lab with identity-bound lineage digests, full ancestry recomputation and fail-closed current-authority checks.
+- Enforce capability subsets, depth, per-parent, run-size and rolling spawn limits independently of advisory analytics.
+- Add a reproducible demo for allowed actions, denied scope/depth/quota attempts and ancestor revocation that blocks a stale descendant action.
+- Compute timestamp and topology features without presenting them as calibrated AI detection or proof of a swarm.
+- Store HATS checkpoints and event projections in per-session SQLite; the local Node database remains in memory, while hosted Durable Object storage survives runtime restart until expiry or reset.
+- Document metadata-only cluster instrumentation boundaries and include a source-only SwiftUI HATS evidence importer, not compiled in Linux.
+
+Publish and deployment verification for this expansion are pending until recorded against the reviewed revision. The v0.2.0 record below describes the prior released runtime.
+
 ## 0.2.0 — October 29, 2026
 
 - License newly written Guardian source under Apache-2.0, with explicit exclusions for private research and separate prior work.

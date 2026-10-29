@@ -24,13 +24,22 @@ const browser = await chromium.launch({ executablePath, headless: true, args: ['
 const context = await browser.newContext({ viewport: { width: 1536, height: 1024 }, acceptDownloads: true, proxy });
 const page = await context.newPage();
 const pageErrors = [];
+const consoleProblems = [];
 const unexpectedFailures = [];
 page.on('pageerror', error => pageErrors.push(error.message));
+page.on('console', message => {
+  if (!['error', 'warning'].includes(message.type())) return;
+  // Chromium emits a console network error for the intentionally unavailable
+  // model endpoint exercised below; the HTTP contract checks its 503 response.
+  if (message.location().url.endsWith('/api/analyze') && /503/.test(message.text())) return;
+  consoleProblems.push(`${message.type()}: ${message.text()}`);
+});
 page.on('response', response => {
   if (response.status() >= 400 && !(response.url().endsWith('/api/analyze') && response.status() === 503)) unexpectedFailures.push(`${response.status()} ${response.url()}`);
 });
 
 async function state() { return (await page.request.get(origin + '/api/state')).json(); }
+async function hatsState() { return (await page.request.get(origin + '/api/hats')).json(); }
 async function workflow() {
   const baseline = page.getByRole('button', { name: 'Run baseline', exact: true });
   await baseline.click();
@@ -132,6 +141,60 @@ try {
     assert.equal((await state()).results.verdict, 'UNKNOWN');
   }
 
+  // HATS is a separate synthetic registry. Its guided denials and manual
+  // controls must change real server state without touching the original run.
+  await page.getByRole('button', { name: 'HATS lab', exact: true }).click();
+  assert.equal(new URL(page.url()).hash, '#hats');
+  await page.getByRole('button', { name: 'Run HATS demo', exact: true }).waitFor();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1');
+  await page.getByRole('button', { name: 'Run HATS demo', exact: true }).click();
+  await page.getByRole('heading', { name: 'Guided demonstration', exact: true }).waitFor();
+  assert.equal(await page.getByTestId('hats-action-count').innerText(), '1');
+  const guidedHats = await hatsState();
+  assert.equal(guidedHats.demo.verdict, 'PASS');
+  assert.ok(guidedHats.demo.steps.every(step => step.passed));
+  assert.equal(guidedHats.syntheticActions, 1);
+  assert.equal(guidedHats.lastDecision.allowed, false);
+  assert.equal(guidedHats.analytics.authority, 'none');
+  assert.equal(guidedHats.ledgerVerification.valid, true);
+  assert.equal((await state()).results.verdict, 'UNKNOWN', 'HATS actions must preserve the original revocation scenario.');
+  await noDocumentOverflow();
+  await page.screenshot({ path: path.join(artifacts, 'hats-demo-desktop.png'), fullPage: true });
+
+  const hatsDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Export HATS evidence', exact: true }).click();
+  const hatsDownload = await hatsDownloadPromise;
+  const hatsDownloadPath = path.join(artifacts, 'hats-evidence.json');
+  await hatsDownload.saveAs(hatsDownloadPath);
+  const hatsBundle = JSON.parse(await readFile(hatsDownloadPath, 'utf8'));
+  assert.equal(hatsBundle.state.runId, guidedHats.runId);
+  assert.equal(hatsBundle.state.demo.verdict, 'PASS');
+  assert.equal(hatsBundle.origin.trusted, false);
+  assert.equal(hatsBundle.origin.signaturesVerified, false);
+
+  await page.getByRole('button', { name: 'Reset HATS lab', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1' && document.querySelector('[data-testid="hats-action-count"]')?.textContent === '0');
+  const manualRoot = (await hatsState()).agents[0];
+  await page.getByRole('button', { name: 'Spawn child', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '2');
+  const manualChild = (await hatsState()).agents.find(agent => agent.parentId === manualRoot.id);
+  assert.equal(await page.getByLabel('Selected agent', { exact: true }).inputValue(), manualChild.id, 'Newly spawned child becomes the selected agent.');
+  await page.getByRole('button', { name: 'Invoke synthetic action', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-action-count"]')?.textContent === '1');
+  await page.getByLabel('Selected agent', { exact: true }).selectOption(manualRoot.id);
+  await page.getByRole('button', { name: 'Revoke selected agent', exact: true }).click();
+  await page.locator('.hats-current-decision').getByText('AUTHORITY_REVOKED', { exact: true }).waitFor();
+  await page.getByLabel('Selected agent', { exact: true }).selectOption(manualChild.id);
+  await page.getByRole('button', { name: 'Invoke synthetic action', exact: true }).click();
+  await page.locator('.hats-current-decision').getByText('ANCESTOR_REVOKED', { exact: true }).waitFor();
+  const manualHats = await hatsState();
+  assert.equal(manualHats.lastDecision.allowed, false);
+  assert.equal(manualHats.syntheticActions, 1);
+  await page.getByRole('button', { name: 'Verify HATS', exact: true }).click();
+  await page.locator('.hats-verification').waitFor();
+  assert.equal((await hatsState()).verification.verdict, 'PASS');
+  await page.getByRole('button', { name: 'Authority graph', exact: true }).click();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await noDocumentOverflow();
   await page.getByRole('button', { name: 'Open navigation' }).click();
@@ -146,7 +209,26 @@ try {
   assert.ok(await page.locator('#scenario').evaluate(select => select.getBoundingClientRect().width > 180), 'Mobile scenario selector must remain readable');
   await page.screenshot({ path: path.join(artifacts, 'mobile-graph.png'), fullPage: true });
   await noDocumentOverflow();
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await page.getByRole('button', { name: 'HATS lab', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '2');
+  assert.equal(await page.getByTestId('hats-action-count').innerText(), '1');
+  await noDocumentOverflow();
+  await page.getByRole('button', { name: 'Reset HATS lab', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1');
+  await page.getByRole('button', { name: 'Run HATS demo', exact: true }).click();
+  await page.getByRole('heading', { name: 'Guided demonstration', exact: true }).waitFor();
+  assert.equal(await page.getByTestId('hats-action-count').innerText(), '1');
+  assert.equal((await hatsState()).demo.verdict, 'PASS');
+  await page.reload();
+  await page.getByRole('heading', { name: 'Guided demonstration', exact: true }).waitFor();
+  assert.equal(new URL(page.url()).hash, '#hats', 'The shared HATS URL must reopen the lab.');
+  assert.equal(await page.getByTestId('hats-action-count').innerText(), '1');
+  await noDocumentOverflow();
+  await page.screenshot({ path: path.join(artifacts, 'hats-demo-mobile.png'), fullPage: true });
+  assert.equal(await page.locator('vite-error-overlay').count(), 0);
   assert.deepEqual(pageErrors, [], 'No browser runtime errors');
+  assert.deepEqual(consoleProblems, [], 'No unexplained console warnings or errors');
   assert.deepEqual(unexpectedFailures, [], 'No unexpected failed resources');
-  console.log(JSON.stringify({ result: 'PASS', origin, viewports: ['1536x1024', '390x844'], checks: ['page identity', 'nonblank', 'no framework overlay', 'no page errors', 'queued denial and PASS', 'alternate witness and FAIL', 'incomplete coverage UNKNOWN', 'evidence download', 'ledger receipt', 'identity separation', 'model proposal isolation and invalidation (mocked)', 'mobile navigation', 'no document overflow'], liveMeta: health.meta.configured ? 'Not exercised by automated test to avoid unrequested billing' : 'Not configured; unavailable state verified', artifacts }, null, 2));
+  console.log(JSON.stringify({ result: 'PASS', origin, viewports: ['1536x1024', '390x844'], checks: ['page identity', 'nonblank', 'no framework overlay', 'no page errors', 'queued denial and PASS', 'alternate witness and FAIL', 'incomplete coverage UNKNOWN', 'evidence download', 'ledger receipt', 'identity separation', 'model proposal isolation and invalidation (mocked)', 'HATS guided boundary assertions', 'HATS manual spawn and ancestor revocation', 'HATS evidence download', 'separate HATS and revocation registries', 'mobile navigation and HATS demo', 'no document overflow'], liveMeta: health.meta.configured ? 'Not exercised by automated test to avoid unrequested billing' : 'Not configured; unavailable state verified', artifacts }, null, 2));
 } finally { await browser.close(); }
