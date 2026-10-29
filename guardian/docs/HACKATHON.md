@@ -15,6 +15,9 @@ The implementation was created in this task on **October 29, 2026**. Preserve th
 | Meta adapter | New server-side Muse Wonder integration that requests structured advisory analysis. A model proposal cannot modify grants, policies or verifier results. |
 | Product surface and tests | New React interface, Node service and reproducible tests for these implemented boundaries. Report only checks actually run against the submitted commit. |
 | Public deployment entry point | New Cloudflare Worker with a SQLite-backed Durable Object per anonymous browser session, validated internal checkpoints, idle expiry and event bounds. Public model requests remain disabled. |
+| HATS lab | New Macro/Meso/Micro/Nano records, full lineage digest recomputation, capability subset enforcement, current ancestor checks and bounded spawning quotas. The synthetic demo attempts depth, scope and quota violations, then revokes an ancestor and retries a descendant action. |
+| Metadata analytics | Features computed from recorded timestamps and registered topology, with uncalibrated advisory forecasts and explicit missing coverage. No real-world AI detection accuracy, human baseline or consensus detection is claimed. |
+| Evidence observer and telemetry design | A source-only iOS 17 SwiftUI importer for HATS JSON exports, plus a metadata-only cluster instrumentation design. The iOS source is not compiled in the Linux verification environment; no live cluster sensors are installed. |
 
 ## Existing ideas and separate work
 
@@ -30,6 +33,8 @@ The verifier can compute reachability over its registered synthetic graph, check
 
 The protected action changes a synthetic demonstration counter. It does not move money, revoke an external credential, cancel a third-party job or enforce permissions in another system. State is isolated per demonstration session. Node sessions are held in memory and disappear on server restart. The Worker entry point stores validated checkpoints in SQLite so sessions survive runtime restart, subject to reset and one-hour idle expiry; it is not an immutable evidence archive.
 
+HATS creates agent records rather than operating-system processes. Its quotas bound the implemented transition API and do not prove that an arbitrary program cannot recurse. The analytic lane is advisory and uses recorded metadata. It has no calibrated probability of agent identity and cannot establish independently observed origin, intent, coordination or consensus. Source labels distinguish synthetic data from checks the harness actually performs.
+
 The ledger recomputes local SHA-256 digests and sequence links. It does not verify signatures, establish legal or vendor identity, provide an external witness or prevent a privileged operator from reconstructing an exported chain. No production authorization, independent evaluation or certification is claimed.
 
 ## Meta usage disclosure
@@ -40,4 +45,4 @@ An implemented adapter, configured key, mocked test response or model name is no
 
 ## Submission boundary
 
-The participant guide supplied for this task requires a public repository, an accessible live product and a three-minute demonstration video that identifies work created during the event. [Guardian source is public on main](https://github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian), and the [public Guardian sandbox](https://unison-guardian.info-ccehospitalitygroup.workers.dev) runs the reviewed merged build. The existing StateBench benchmark must be disclosed as prior work. [Release checks](RELEASE_CHECKS.md) record the reviewed source, CI and deployment evidence. Live Meta usage, the video and organizer submission remain pending; no acceptance or certification is claimed.
+The participant guide supplied for this task requires a public repository, an accessible live product and a three-minute demonstration video that identifies work created during the event. [Guardian source is public on main](https://github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian), and the [public Guardian sandbox](https://unison-guardian.info-ccehospitalitygroup.workers.dev) runs the reviewed merged build recorded in [release checks](RELEASE_CHECKS.md). The HATS expansion requires its own reviewed source, CI and deployment record before inclusion in that live-runtime claim. The existing StateBench benchmark must be disclosed as prior work. Live Meta usage, the video and organizer submission remain pending; no acceptance or certification is claimed.

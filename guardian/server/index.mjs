@@ -8,6 +8,8 @@ import {
   replayQueued, verifySandbox, exportEvidence,
 } from './engine.mjs';
 import { metaStatus, analyzeWithMeta } from './meta.mjs';
+import { createHatsStore } from './hats-sqlite.mjs';
+import { HATS_COMMANDS } from './hats-service.mjs';
 
 const DIST = path.resolve(fileURLToPath(new URL('../dist/', import.meta.url)));
 const SCENARIOS = new Set(['queued', 'alternate', 'unknown']);
@@ -21,18 +23,26 @@ class ApiError extends Error {
 export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now = Date.now } = {}) {
   // Sessions isolate demo data. They are not a substitute for deployment authentication.
   const sessions = new Map();
+  const hatsStore = createHatsStore();
   let analysisInFlight = false;
   let lastGlobalAnalysis = null;
 
   function session(req, res) {
-    for (const [key, value] of sessions) if (now() - value.touched > SESSION_TTL) sessions.delete(key);
+    for (const [key, value] of sessions) if (now() - value.touched > SESSION_TTL) {
+      sessions.delete(key);
+      hatsStore.delete(key);
+    }
     const cookie = req.headers.cookie?.split(';').map(v => v.trim()).find(v => v.startsWith('guardian_session='))?.slice(17);
     let id = cookie && /^[a-f0-9]{48}$/.test(cookie) ? cookie : null;
     let value = id ? sessions.get(id) : null;
     if (!value) {
-      if (sessions.size >= 256) sessions.delete(sessions.keys().next().value);
+      if (sessions.size >= 256) {
+        const expiredId = sessions.keys().next().value;
+        sessions.delete(expiredId);
+        hatsStore.delete(expiredId);
+      }
       id = randomBytes(24).toString('hex');
-      value = { sandbox: createSandbox(), touched: now(), lastAnalysis: null };
+      value = { id, sandbox: createSandbox(), touched: now(), lastAnalysis: null };
       sessions.set(id, value);
     }
     value.touched = now();
@@ -60,11 +70,15 @@ export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now 
     catch { throw new ApiError('INVALID_JSON', 'The request body is not valid JSON.'); }
   }
 
-  return createServer(async (req, res) => {
+  const server = createServer(async (req, res) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
     try {
       const url = new URL(req.url, 'http://localhost');
+      if (req.method === 'GET' && ['/health/live', '/health/ready'].includes(url.pathname)) return send(res, 200, {
+        status: url.pathname.endsWith('ready') ? 'ready' : 'ok', service: 'unison-guardian', version: '0.3.0',
+        authorityLane: 'deterministic synthetic sandbox', analyticsAuthority: 'none',
+      });
       if (!url.pathname.startsWith('/api/')) {
         if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' } });
         const requested = decodeURIComponent(url.pathname);
@@ -83,7 +97,7 @@ export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now 
         return res.end(req.method === 'HEAD' ? undefined : asset);
       }
 
-      if (req.method === 'GET' && url.pathname === '/api/health') return send(res, 200, { status: 'ok', mode: 'local-sandbox', meta: status(), persistence: 'in-memory', authorityScope: 'registered synthetic paths only' });
+      if (req.method === 'GET' && url.pathname === '/api/health') return send(res, 200, { status: 'ok', version: '0.3.0', mode: 'local-sandbox', meta: status(), persistence: 'in-memory', hatsPersistence: 'in-memory-sqlite', authorityScope: 'registered synthetic paths only' });
 
       if (req.method === 'POST' && req.headers.origin) {
         let origin;
@@ -92,6 +106,14 @@ export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now 
       }
 
       const state = session(req, res);
+      if (url.pathname === '/api/hats' || url.pathname.startsWith('/api/hats/')) {
+        const name = url.pathname === '/api/hats' ? 'state' : url.pathname.slice('/api/hats/'.length);
+        const read = ['state', 'evidence'].includes(name);
+        if (!HATS_COMMANDS.has(name) || req.method !== (read ? 'GET' : 'POST')) throw new ApiError('NOT_FOUND', 'HATS route not found.', 404);
+        const input = read ? {} : await body(req);
+        const result = hatsStore.command(state.id, name, input);
+        return send(res, 200, result, name === 'evidence' ? { 'Content-Disposition': 'attachment; filename="unison-guardian-hats-evidence.json"' } : {});
+      }
       if (req.method === 'GET' && url.pathname === '/api/state') return send(res, 200, snapshot(state.sandbox));
       if (req.method === 'GET' && url.pathname === '/api/evidence') return send(res, 200, exportEvidence(state.sandbox), { 'Content-Disposition': 'attachment; filename="unison-guardian-evidence.json"' });
       if (req.method !== 'POST') throw new ApiError('NOT_FOUND', 'API route not found.', 404);
@@ -128,6 +150,8 @@ export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now 
       send(res, known ? error.status : 500, { error: { code: known ? error.code : 'INTERNAL_ERROR', message: known ? error.message : 'The sandbox could not complete this request.' } });
     }
   });
+  server.once('close', () => hatsStore.close());
+  return server;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

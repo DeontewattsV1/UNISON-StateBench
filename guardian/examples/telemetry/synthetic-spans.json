@@ -1,0 +1,46 @@
+{
+  "sourceClass": "SIMULATED",
+  "coverageComplete": true,
+  "spans": [
+    {
+      "traceId": "11111111111111111111111111111111",
+      "spanId": "0000000000000001",
+      "parentSpanId": null,
+      "agentId": "synthetic-macro",
+      "kind": "spawn",
+      "startedAt": "2026-10-29T10:00:00.000Z",
+      "endedAt": "2026-10-29T10:00:00.020Z",
+      "status": "ok"
+    },
+    {
+      "traceId": "11111111111111111111111111111111",
+      "spanId": "0000000000000002",
+      "parentSpanId": "0000000000000001",
+      "agentId": "synthetic-meso",
+      "kind": "tool",
+      "startedAt": "2026-10-29T10:00:00.050Z",
+      "endedAt": "2026-10-29T10:00:00.100Z",
+      "status": "ok"
+    },
+    {
+      "traceId": "11111111111111111111111111111111",
+      "spanId": "0000000000000003",
+      "parentSpanId": "0000000000000002",
+      "agentId": "synthetic-micro",
+      "kind": "message",
+      "startedAt": "2026-10-29T10:00:01.000Z",
+      "endedAt": "2026-10-29T10:00:01.100Z",
+      "status": "ok"
+    },
+    {
+      "traceId": "11111111111111111111111111111111",
+      "spanId": "0000000000000004",
+      "parentSpanId": "0000000000000002",
+      "agentId": "synthetic-nano",
+      "kind": "tool",
+      "startedAt": "2026-10-29T10:00:01.020Z",
+      "endedAt": "2026-10-29T10:00:01.070Z",
+      "status": "unknown"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Submission draft — UNISON Guardian
 
-**Status: draft for the participant's review.** Guardian source is public on main, PR #24 is merged, and the reviewed runtime is deployed. CI and deployment checks are recorded in [RELEASE_CHECKS.md](RELEASE_CHECKS.md). Video, real Meta usage and final submission remain pending.
+**Status: draft for the participant's review.** The v0.2.0 Guardian runtime is public and deployed. The HATS expansion described below requires its own reviewed source, CI and deployment record before the release claims are updated. Existing release evidence is in [RELEASE_CHECKS.md](RELEASE_CHECKS.md). Video, real Meta usage and final submission remain pending.
 
 ## Entry details
 
@@ -20,13 +20,17 @@
 
 ## Short description
 
-UNISON Guardian is an open, testable demonstration of authority and revocation for AI agents. It maps registered delegation paths, rechecks queued actions at execution time and preserves evidence without treating model assertions as authorization.
+UNISON Guardian is an open, testable harness for delegated authority. It maps registered paths, rechecks queued actions and hierarchical agent ancestry at execution time, enforces bounded spawning, and preserves evidence without treating model assertions as authorization.
 
 ## What we built
 
 Agent permissions often span a planner, delegated agents, queued work and a tool gateway. Removing one authorization may leave another path to a protected action. Developers need a way to inspect that distinction and reproduce the failure.
 
 Guardian combines an interactive authority graph with a deterministic verifier and an inspectable event ledger. A baseline run executes a synthetic action and queues another. Revoking the ancestor grant then blocks that queued operation at commit. A second scenario exposes a surviving independent route and returns FAIL. A third returns UNKNOWN because inventory coverage is incomplete.
+
+The HATS lab adds a four-level Macro/Meso/Micro/Nano hierarchy. Each digest binds the run, child identity, parent digest and inherited scope. Actual lineage recomputation and current ancestor checks govern synthetic invocations. Hard depth, scope and spawning quotas reject excessive transitions independently of analytics. The one-click demo exercises these denials, then revokes an ancestor and attempts the stale descendant action while the synthetic action counter stays at one.
+
+An analytic lane computes timestamp and topology features from recorded metadata. Its uncalibrated forecasts are advisory. They are not a probability that an actor is AI, proof of consensus or independently authenticated attribution. Metadata minimization rejects unsupported fields; raw prompts, generated text, tokens, credentials, private headers, literal IPs and mouse trajectories are outside the default contract. Proposed cluster collector rules are documented, not deployed sensors.
 
 The model integration asks Muse Wonder to produce structured suggestions about the registered graph. That advisory output cannot modify permissions or decide verification outcomes. The server-side adapter and deterministic verifier are separate paths through the implementation.
 
@@ -44,9 +48,9 @@ The local Node implementation targets `muse-wonder-1.0` through Meta's Responses
 
 ## Original contribution and limitations
 
-The Guardian graph, verifier, three scenarios, event inspector, Meta adapter, interface, Worker persistence layer and tests in `guardian/` were newly implemented for this hackathon task. Earlier research informed the problem framing. Existing StateBench code, fixtures, experiments and results outside `guardian/` are prior work in the same repository and are excluded from the new contribution; see [HACKATHON.md](HACKATHON.md). Guardian source is Apache-2.0, while existing StateBench remains MIT. Neither component relicenses the other. Supplied private research is excluded and is not relicensed.
+The Guardian graph, verifier, three scenarios, HATS lab, metadata analytics, event inspector, Meta adapter, interface, SQLite persistence layer and tests in `guardian/` were newly implemented for this hackathon task. A SwiftUI evidence importer is included as source-only and has not been compiled in the Linux environment. Earlier research informed the problem framing. Existing StateBench code, fixtures, experiments and results outside `guardian/` are prior work in the same repository and are excluded from the new contribution; see [HACKATHON.md](HACKATHON.md). Guardian source is Apache-2.0, while existing StateBench remains MIT. Neither component relicenses the other. Supplied private research is excluded and is not relicensed.
 
-All principals, grants, protected actions and scenario events are synthetic. The app does not revoke real cloud credentials or control third-party execution. Its hash chain supports consistency inspection, not authenticated legal identity, independent certification or externally immutable history. Node sessions are lost on server restart. Worker sessions survive runtime restart through server-side SQLite checkpoints, with one-hour idle expiry, reset and a 200-event run limit. Anonymous cookies isolate sessions without authenticating users.
+All principals, grants, protected actions and scenario events are synthetic. The app does not revoke real cloud credentials or control third-party execution. HATS creates records, not external processes; bounded API spawning is not a proof against arbitrary program recursion. Its hash chains and receipts support consistency inspection, not authenticated legal identity, independent certification or externally immutable history. Node sessions, including its in-memory HATS SQLite database, are lost on server restart. Worker sessions survive runtime restart through server-side SQLite checkpoints, with one-hour idle expiry, reset and event bounds. Anonymous cookies isolate sessions without authenticating users.
 
 ## Participant-owned submission checklist
 
@@ -59,6 +63,7 @@ Complete these checks against the final artifact; unchecked items are pending, n
 - [ ] Complete a successful real Meta request and retain non-secret evidence of the response.
 - [x] Deploy the candidate build and confirm its live health endpoint; deployed source commit is recorded above.
 - [x] Confirm the core workflow works at the live URL and retain the desktop/mobile browser verification result.
+- [ ] Record the reviewed HATS expansion revision, CI and live desktop/mobile checks before including it in the deployed-runtime claim.
 - [ ] Record the three-minute video using [DEMO_SCRIPT.md](DEMO_SCRIPT.md); clearly identify new work and actual model-call status.
 - [ ] Confirm that judges can access the repository, live product and video links.
 - [ ] List every project contributor accurately and confirm the selected track.
