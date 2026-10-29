@@ -4,6 +4,18 @@
 
 UNISON-StateBench evaluates whether an AI system preserves explicitly defined invariants across representation changes, provenance/authority conflicts, missing evidence, and state transitions.
 
+## UNISON Guardian
+
+The [Guardian application](guardian/README.md) is a separate, newly implemented hackathon sandbox for agent authority, delegated revocation, and inspectable evidence. Try the [live public demo](https://unison-guardian.info-ccehospitalitygroup.workers.dev), or run it from this checkout:
+
+```bash
+cd guardian
+npm ci
+npm run dev
+```
+
+Guardian requires Node.js 24 or newer. Its public demo uses synthetic actions and disables paid model requests. Guardian's new source is licensed under [Apache-2.0](guardian/LICENSE), with its own [NOTICE](guardian/NOTICE). The existing StateBench Python benchmark remains prior work under the repository's [MIT license](LICENSE); it is not presented as new hackathon functionality. See the [contribution disclosure](guardian/docs/HACKATHON.md) and [deployment guide](guardian/docs/DEPLOYMENT.md).
+
 ## Frozen constitutional core
 
 A canonical invariant is typed as:
