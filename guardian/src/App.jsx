@@ -54,16 +54,21 @@ export default function App() {
     if (window.location.hash !== `#${id}`) window.location.hash = id;
   }
   const { state, health, pending, error, proposal, modelError, refresh, act, analyze } = useSandbox();
+  // Establish the shared HttpOnly session before mounting another session client.
+  // The browser accepts Set-Cookie before the state response is decoded.
+  const sessionReady = Boolean(state?.runId);
   const [title, subtitle] = headers[view];
   const hasBaseline = Boolean(state?.queue?.length || state?.phase === 'authorized' || state?.phase === 'revoked');
   return <div className="app-shell">
     <Sidebar view={view} setView={navigate} mode={health?.mode} />
     <main className="main-content" id="main-content">
-      <header className="page-header"><div><h1>{title}</h1><p>{subtitle}</p></div><div className="header-actions">{view === 'graph' && <Button icon={Play} variant="primary" onClick={() => act('baseline')} disabled={!state || Boolean(pending) || hasBaseline} loading={pending === 'baseline'}>Run baseline</Button>}<a className="button button--outline" href={view === 'hats' ? '/api/hats/evidence' : '/api/evidence'} download={view === 'hats' ? 'unison-guardian-hats-evidence.json' : 'unison-guardian-evidence.json'}><Download size={18} aria-hidden="true" />{view === 'hats' ? 'Export HATS evidence' : 'Export evidence'}</a></div></header>
-      {view !== 'hats' && error && <div className="error-notice" role="alert"><AlertCircle size={19} /><span>{error}</span><button onClick={refresh}>Retry</button></div>}
-      {view !== 'hats' && <section className="scenario-rail" aria-label="Sandbox scenario"><label htmlFor="scenario">Scenario</label><select id="scenario" value={state?.scenario || 'queued'} disabled={!state || Boolean(pending)} onChange={e => act('reset', { scenario: e.target.value })}><option value="queued">Queued delegation</option><option value="alternate">Alternate authority path</option><option value="unknown">Incomplete inventory</option></select><span className="rail-divider" /><Button icon={RotateCcw} onClick={() => act('reset', { scenario: state?.scenario || 'queued' })} disabled={Boolean(pending)} loading={pending === 'reset'}>Reset sandbox</Button></section>}
-      {view === 'graph' && <><div className="workspace-grid"><AuthorityGraph state={state} /><div className="inspection-column"><RevocationTest state={state} pending={pending} act={act} /><ModelPanel health={health} pending={pending} analyze={analyze} proposal={proposal} modelError={modelError} /></div></div><Ledger state={state} /></>}
-      {view === 'hats' && <Suspense fallback={<section className="panel hats-loading" role="status">Loading HATS lab…</section>}><HatsLab /></Suspense>}
+      <header className="page-header"><div><h1>{title}</h1><p>{subtitle}</p></div><div className="header-actions">{view === 'graph' && <Button icon={Play} variant="primary" onClick={() => act('baseline')} disabled={!state || Boolean(pending) || hasBaseline} loading={pending === 'baseline'}>Run baseline</Button>}<a className="button button--outline" href={sessionReady ? (view === 'hats' ? '/api/hats/evidence' : '/api/evidence') : undefined} aria-disabled={!sessionReady || undefined} tabIndex={sessionReady ? undefined : -1} download={view === 'hats' ? 'unison-guardian-hats-evidence.json' : 'unison-guardian-evidence.json'}><Download size={18} aria-hidden="true" />{view === 'hats' ? 'Export HATS evidence' : 'Export evidence'}</a></div></header>
+      {error && (view !== 'hats' || !sessionReady) && <div className="error-notice" role="alert"><AlertCircle size={19} /><span>{error}</span><button onClick={refresh}>Retry</button></div>}
+      {view !== 'hats' && <section className="scenario-rail" aria-label="Sandbox scenario"><label htmlFor="scenario">Scenario</label><select id="scenario" value={state?.scenario || 'queued'} disabled={!state || Boolean(pending)} onChange={e => act('reset', { scenario: e.target.value })}><option value="queued">Queued delegation</option><option value="alternate">Alternate authority path</option><option value="unknown">Incomplete inventory</option></select><span className="rail-divider" /><Button icon={RotateCcw} onClick={() => act('reset', { scenario: state?.scenario || 'queued' })} disabled={!sessionReady || Boolean(pending)} loading={pending === 'reset'}>Reset sandbox</Button></section>}
+      {view === 'graph' && <><div className="workspace-grid"><AuthorityGraph state={state} /><div className="inspection-column"><RevocationTest state={state} pending={pending} act={act} /><ModelPanel health={health} pending={sessionReady ? pending : 'session'} analyze={analyze} proposal={proposal} modelError={modelError} /></div></div><Ledger state={state} /></>}
+      {view === 'hats' && (sessionReady
+        ? <Suspense fallback={<section className="panel identity-panel" role="status">Loading HATS lab…</section>}><HatsLab /></Suspense>
+        : !error && <section className="panel identity-panel" role="status">Connecting to sandbox session…</section>)}
       {view === 'ledger' && <Ledger state={state} full />}
       {view === 'identity' && <IdentityView state={state} health={health} />}
       {view === 'how' && <HowItWorks health={health} />}
