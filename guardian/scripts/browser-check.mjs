@@ -124,6 +124,13 @@ async function verifyHatsBootstrapRetry() {
     assert.equal(await exportControl.getAttribute('href'), null);
     assert.equal(await exportControl.getAttribute('aria-disabled'), 'true');
     assert.equal(await retryPage.getByRole('button', { name: 'Spawn child', exact: true }).count(), 0);
+    await retryPage.getByRole('button', { name: 'Open navigation' }).click();
+    await retryPage.getByRole('button', { name: 'Authority graph', exact: true }).click();
+    await retryPage.getByRole('button', { name: /Ask Muse/ }).click();
+    assert.equal(await retryPage.getByRole('button', { name: 'Analyze this sandbox' }).isDisabled(), true,
+      'Local model analysis must also wait for the shared browser session.');
+    await retryPage.getByRole('button', { name: 'Open navigation' }).click();
+    await retryPage.getByRole('button', { name: 'HATS lab', exact: true }).click();
     await retryPage.screenshot({ path: path.join(artifacts, 'hats-bootstrap-retry-mobile.png'), fullPage: true });
     await retryPage.getByRole('button', { name: 'Retry', exact: true }).click();
     await retryPage.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1');
