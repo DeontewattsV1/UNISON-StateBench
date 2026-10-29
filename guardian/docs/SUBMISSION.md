@@ -1,6 +1,6 @@
 # Submission draft — UNISON Guardian
 
-**Status: draft for the participant's review.** Guardian source is public on main, PR #24 is merged, and the reviewed runtime is deployed. CI and deployment checks are recorded in [RELEASE_CHECKS.md](RELEASE_CHECKS.md). Video, real Meta usage, release asset publication and final submission remain pending.
+**Status: draft for the participant's review.** Guardian source is public on main, PR #24 is merged, and the reviewed runtime is deployed. CI and deployment checks are recorded in [RELEASE_CHECKS.md](RELEASE_CHECKS.md). Video, real Meta usage and final submission remain pending.
 
 ## Entry details
 
