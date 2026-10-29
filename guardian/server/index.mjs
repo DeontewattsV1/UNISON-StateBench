@@ -27,15 +27,17 @@ export function createApp({ analyze = analyzeWithMeta, status = metaStatus, now 
   function session(req, res) {
     for (const [key, value] of sessions) if (now() - value.touched > SESSION_TTL) sessions.delete(key);
     const cookie = req.headers.cookie?.split(';').map(v => v.trim()).find(v => v.startsWith('guardian_session='))?.slice(17);
-    let value = cookie && /^[a-f0-9]{48}$/.test(cookie) ? sessions.get(cookie) : null;
+    let id = cookie && /^[a-f0-9]{48}$/.test(cookie) ? cookie : null;
+    let value = id ? sessions.get(id) : null;
     if (!value) {
       if (sessions.size >= 256) sessions.delete(sessions.keys().next().value);
-      const id = randomBytes(24).toString('hex');
+      id = randomBytes(24).toString('hex');
       value = { sandbox: createSandbox(), touched: now(), lastAnalysis: null };
       sessions.set(id, value);
-      res.setHeader('Set-Cookie', `guardian_session=${id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`);
     }
     value.touched = now();
+    // Keep the browser cookie aligned with the server's sliding idle deadline.
+    res.setHeader('Set-Cookie', `guardian_session=${id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600`);
     return value;
   }
 

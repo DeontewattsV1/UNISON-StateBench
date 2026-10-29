@@ -1,10 +1,10 @@
 # Release candidate checks
 
-Checks performed October 29, 2026 for Guardian version 0.2.0 are recorded below. Guardian integrates under `guardian/` in UNISON-StateBench on branch `feat/unison-guardian-hackathon`. Local integration verification passed: 104 StateBench tests on Python 3.12, 41 Guardian backend tests, 6 Worker tests, the production build, and desktop/mobile browser workflows against the nested app. Python 3.11 and remote GitHub Actions remain to be verified. No real Meta response is established by these checks.
+Checks performed October 29, 2026 for Guardian version 0.2.0 are recorded below. Guardian integrates under `guardian/` in UNISON-StateBench on branch `feat/unison-guardian-hackathon`. Local integration verification passed: 104 StateBench tests on Python 3.12, 42 Guardian backend tests, 6 Worker tests, the production build, and desktop/mobile browser workflows against the nested app. GitHub Actions passed Python 3.11, Python 3.12 and Guardian checks for initial integration commit `350ba509b4096d2a5b1bc21117db074fd1957f60`; repeat checks after review fixes before merging. No real Meta response is established by these checks.
 
 | Check | Observed result |
 | --- | --- |
-| `npm test` | 41 tests passed: deterministic engine, checkpoint restoration, local HTTP isolation and mocked Meta transport |
+| `npm test` | 42 tests passed: deterministic engine, checkpoint restoration, local HTTP isolation, active-session cookie renewal and mocked Meta transport |
 | `npm run build:worker` | React production build and bundled Worker completed |
 | `npm run test:worker` | 6 tests passed in Miniflare/workerd, including complete runtime restarts with retained SQLite storage, concurrent replay, session isolation, and event-limit rollback |
 | `npx wrangler deploy --dry-run --outdir .release/wrangler` | Deployment bundle validated; this dry-run command performed no upload |

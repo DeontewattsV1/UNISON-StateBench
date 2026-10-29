@@ -8,15 +8,22 @@ async function withServer(fn, options = {}) {
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const base = `http://127.0.0.1:${server.address().port}`;
-  const client = () => {
+  const client = ({ now: browserNow = Date.now } = {}) => {
     let cookie = '';
+    let cookieExpiresAt = 0;
     return async (route, body, extra = {}) => {
+      if (browserNow() >= cookieExpiresAt) cookie = '';
       const res = await fetch(base + route, {
         method: body === undefined ? 'GET' : 'POST',
         headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}), ...extra },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
-      if (res.headers.get('set-cookie')) cookie = res.headers.get('set-cookie').split(';')[0];
+      const setCookie = res.headers.get('set-cookie');
+      if (setCookie) {
+        cookie = setCookie.split(';')[0];
+        const maxAge = /(?:^|;\s*)Max-Age=(\d+)(?:;|$)/i.exec(setCookie);
+        cookieExpiresAt = maxAge ? browserNow() + Number(maxAge[1]) * 1000 : Infinity;
+      }
       return { status: res.status, data: await res.json(), headers: res.headers };
     };
   };
@@ -53,6 +60,48 @@ test('different browser sessions have isolated authority and queues', async () =
     await alice('/api/revoke', {});
     assert.equal((await bob('/api/state')).data.phase, 'ready');
   });
+});
+
+test('active browser sessions renew their cookie and retain queued work past the original expiry', async () => {
+  const minute = 60_000;
+  let clock = 0;
+  await withServer(async client => {
+    const request = client({ now: () => clock });
+    const initial = await request('/api/state');
+    const initialCookie = initial.headers.get('set-cookie')?.split(';')[0];
+    const baseline = await request('/api/baseline', {});
+    assert.equal(baseline.data.stats.protectedActions, 1);
+    assert.equal(baseline.data.queue[0].status, 'pending');
+
+    clock = 50 * minute;
+    const active = await request('/api/state');
+    assert.equal(active.data.runId, initial.data.runId);
+    assert.deepEqual(active.data.queue, baseline.data.queue);
+
+    // The client models Max-Age rather than retaining cookies indefinitely.
+    // Without renewal at 50 minutes, it drops the original cookie at 70.
+    clock = 70 * minute;
+    const continued = await request('/api/state');
+    assert.equal(continued.data.runId, initial.data.runId, 'Activity must preserve the browser session beyond its original cookie expiry.');
+    assert.deepEqual(continued.data.queue, baseline.data.queue);
+    assert.equal(continued.data.stats.protectedActions, 1);
+
+    const renewed = active.headers.get('set-cookie') || '';
+    assert.ok(Boolean(initialCookie) && renewed.split(';')[0] === initialCookie, 'Renewal must retain the existing random session ID.');
+    for (const attribute of ['Max-Age=3600', 'HttpOnly', 'SameSite=Strict', 'Path=/']) {
+      assert.ok(renewed.split(';').map(value => value.trim()).includes(attribute), `Renewal must preserve ${attribute}.`);
+    }
+
+    // More than one hour idle since the last session activity starts a new run.
+    clock = 131 * minute;
+    const expired = await request('/api/state');
+    assert.notEqual(expired.data.runId, initial.data.runId);
+    assert.equal(expired.data.phase, 'ready');
+    assert.deepEqual(expired.data.queue, []);
+    assert.equal(expired.data.stats.protectedActions, 0);
+    const expiredCookie = expired.headers.get('set-cookie')?.split(';')[0];
+    assert.ok(Boolean(expiredCookie) && expiredCookie !== initialCookie, 'An expired browser session must receive a fresh random ID.');
+  }, { now: () => clock });
 });
 
 test('API rejects cross-origin mutations, unknown scenarios and malformed JSON', async () => {
