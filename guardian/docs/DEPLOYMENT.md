@@ -1,24 +1,25 @@
 # Deployment
 
-The [public sandbox](https://unison-guardian.info-ccehospitalitygroup.workers.dev) runs on Cloudflare Workers with SQLite-backed Durable Objects. It serves the deterministic sandbox without a model credential. Source integrates as the `guardian/` component of [UNISON-StateBench](https://github.com/DeontewattsV1/UNISON-StateBench).
+The [public sandbox](https://unison-guardian.info-ccehospitalitygroup.workers.dev) runs on Cloudflare Workers with SQLite-backed Durable Objects. It serves the deterministic sandbox without a model credential. Source is public as the [`guardian/` component of UNISON-StateBench](https://github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian), merged through [PR #24](https://github.com/DeontewattsV1/UNISON-StateBench/pull/24).
 
 ## Observed deployment
 
 | Field | Recorded value |
 | --- | --- |
 | Live URL | https://unison-guardian.info-ccehospitalitygroup.workers.dev |
-| Initial standalone source ID | `fafd11fff463a6b75dea6cce5820ceec7730088f` — before repository integration |
-| Integration branch | `feat/unison-guardian-hackathon`, component `guardian/`; record the reviewed merge commit separately |
+| Deployed source commit | [`ae06eab73316c94a4bd8c2e3a81c99a77bd208da`](https://github.com/DeontewattsV1/UNISON-StateBench/commit/ae06eab73316c94a4bd8c2e3a81c99a77bd208da) |
+| Reviewed merge | [PR #24](https://github.com/DeontewattsV1/UNISON-StateBench/pull/24), component `guardian/` |
 | Worker bundle SHA-256 | `4345eea98f2f0df94d002c1906f7d62a7abd09e3060209575b08870477d07812` |
-| Cloudflare upload result | HTTP 200; deployment ID `21cfa18f8b4843fa9d5e5de516c30a18` |
+| Cloudflare upload result | HTTP 200; deployment ID `9bc7c42e0cd54601bd97987bae3885c1` |
 | Durable Object migration | `v1`, SQLite class `GuardianSession`, binding `GUARDIAN_SESSIONS` |
 | Public route | Workers.dev enabled; preview URLs disabled |
 | Live health check | HTTP 200; `public-sandbox`, `per-session-durable-object-sqlite`, `meta.enabled: false` |
-| Live browser workflow | PASS at the HTTPS origin: desktop 1536×1024 and mobile 390×844 |
+| Post-deployment browser workflow | PASS at the HTTPS origin: desktop 1536×1024 and mobile 390×844 |
+| State continuity across deployment | Same run and queued operation retained; later revocation/replay blocked the stale action and left the counter at one |
 
-The live browser check exercised queued-action denial with an unchanged synthetic counter, alternate-path FAIL, incomplete-coverage UNKNOWN, identity and ledger navigation, evidence export, and HTTP 503 model unavailability. Proposal display and isolation used intercepted, explicitly mocked responses; no real Meta inference was requested.
+The post-deployment browser check exercised queued-action denial with an unchanged synthetic counter, alternate-path FAIL, incomplete-coverage UNKNOWN, identity and ledger navigation, evidence export, and HTTP 503 model unavailability. The exported evidence passed standalone digest recomputation with origin still untrusted. Proposal display and isolation used intercepted, explicitly mocked responses; no real Meta inference was requested.
 
-The deployment record above describes the initial standalone build. Repository integration uses branch `feat/unison-guardian-hackathon`, based on StateBench commit `c5fd57605d7cdf538a7be254adbfbfede2390af7`. Validate the build from `guardian/`, then record its deployed source commit, Worker bundle digest and observed checks. A passing initial deployment check alone does not attest a later branch build or merge.
+This deployment uses the reviewed merged source. The existing SQLite Durable Object namespace and migration tag `v1` were retained. A cross-deployment test queued an operation before deployment, observed the same run and job afterward, then revoked authority and replayed the operation. Replay was blocked and the synthetic counter remained one. [Guardian CI](https://github.com/DeontewattsV1/UNISON-StateBench/actions/runs/40860198801) and [StateBench CI](https://github.com/DeontewattsV1/UNISON-StateBench/actions/runs/40860198761) both passed for the deployed source commit.
 
 ## Build and inspect locally
 

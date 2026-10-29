@@ -1,6 +1,6 @@
 # Submission draft — UNISON Guardian
 
-**Status: draft for the participant's review.** The public sandbox is deployed; live health checks and desktop/mobile browser workflows pass. Guardian source integrates under `guardian/` in the existing public UNISON-StateBench repository. Record the reviewed integration commit before submission. Video, real Meta usage and final submission remain pending.
+**Status: draft for the participant's review.** Guardian source is public on main, PR #24 is merged, and the reviewed runtime is deployed. CI and deployment checks are recorded in [RELEASE_CHECKS.md](RELEASE_CHECKS.md). Video, real Meta usage and final submission remain pending.
 
 ## Entry details
 
@@ -13,7 +13,8 @@
 | GitHub profile | https://github.com/DeontewattsV1 |
 | LinkedIn | https://www.linkedin.com/in/deonte-watts-73aa363a7 |
 | Location | San Francisco, California, United States |
-| Public project repository | https://github.com/DeontewattsV1/UNISON-StateBench — Guardian component: `guardian/`; integration branch: `feat/unison-guardian-hackathon` |
+| Public project repository | https://github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian — merged through PR #24 |
+| Reviewed runtime source | `ae06eab73316c94a4bd8c2e3a81c99a77bd208da` |
 | Live product | https://unison-guardian.info-ccehospitalitygroup.workers.dev — health check and desktop/mobile browser workflows verified |
 | Three-minute video | PENDING — add an accessible video URL |
 
@@ -29,7 +30,7 @@ Guardian combines an interactive authority graph with a deterministic verifier a
 
 The model integration asks Muse Wonder to produce structured suggestions about the registered graph. That advisory output cannot modify permissions or decide verification outcomes. The server-side adapter and deterministic verifier are separate paths through the implementation.
 
-A Cloudflare deployment uses SQLite-backed Durable Objects to preserve each anonymous demonstration session through runtime restart. It serves the deterministic scenarios with paid model requests disabled. The initial live sandbox used standalone Guardian source ID `fafd11fff463a6b75dea6cce5820ceec7730088f`; its health endpoint confirms the expected runtime and disabled model boundary. The repository integration places this implementation in `guardian/` alongside the existing StateBench benchmark. See [RELEASE_CHECKS.md](RELEASE_CHECKS.md) for the deployment record and the final integration verification requirements.
+A Cloudflare deployment uses SQLite-backed Durable Objects to preserve each anonymous demonstration session through runtime restart. It serves the deterministic scenarios with paid model requests disabled. The live runtime was deployed from merged source commit `ae06eab73316c94a4bd8c2e3a81c99a77bd208da`. A retained run and queued operation survived deployment; subsequent revocation and replay blocked the stale action while the synthetic counter stayed at one. Guardian is hosted in `guardian/` alongside the existing StateBench benchmark. See [RELEASE_CHECKS.md](RELEASE_CHECKS.md) for exact CI and deployment evidence.
 
 ## Why it fits Push the Frontier
 
@@ -51,10 +52,10 @@ All principals, grants, protected actions and scenario events are synthetic. The
 
 Complete these checks against the final artifact; unchecked items are pending, not completed work.
 
-- [ ] Publish the reviewed `guardian/` integration and confirm it opens without account access.
-- [ ] Verify `guardian/` contains only intended new source, synthetic scenarios and documentation; exclude credentials and private research inputs, and disclose StateBench outside it as prior work.
-- [ ] Record the submitted commit and preserve an accurate history of work created during the event.
-- [ ] Run the relevant tests and production build against that commit; retain their actual results.
+- [x] Publish the reviewed `guardian/` integration and confirm it opens without account access.
+- [x] Verify `guardian/` contains only intended new source, synthetic scenarios and documentation; exclude credentials and private research inputs, and disclose StateBench outside it as prior work.
+- [x] Record the reviewed candidate runtime commit and preserve an accurate history of work created during the event.
+- [x] Run the relevant tests and production build for the reviewed candidate; retain the commit-specific results.
 - [ ] Complete a successful real Meta request and retain non-secret evidence of the response.
 - [x] Deploy the candidate build and confirm its live health endpoint; deployed source commit is recorded above.
 - [x] Confirm the core workflow works at the live URL and retain the desktop/mobile browser verification result.
@@ -66,4 +67,4 @@ Complete these checks against the final artifact; unchecked items are pending, n
 
 The participant guide supplied for this task gives the deadline as **November 4, 2026 at 6:00 PM Pacific Time** (**9:00 PM America/New_York**). Check the current organizer page for changes before submitting: https://cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/submit.
 
-The public sandbox deployment is recorded above. The source destination is the existing public UNISON-StateBench repository; this draft does not establish that the integration branch has merged. It has not submitted an application, claimed credits, accepted terms or uploaded a video.
+The source publication, merged candidate and public deployment are recorded above. This draft has not submitted an application, claimed credits, accepted terms or uploaded a video.

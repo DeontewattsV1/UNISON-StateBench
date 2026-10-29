@@ -40,7 +40,7 @@ npm run deploy:worker
 
 The [public sandbox is live](https://unison-guardian.info-ccehospitalitygroup.workers.dev). Its health endpoint returned HTTP 200 with SQLite session persistence and model requests disabled. Desktop and mobile browser workflows passed at the live HTTPS URL. See [deployment instructions](docs/DEPLOYMENT.md) for the deployed commit, bundle digest and verification record. Hosting can incur Cloudflare usage charges.
 
-Guardian is the `guardian/` component of [UNISON-StateBench](https://github.com/DeontewattsV1/UNISON-StateBench). The integration branch is `feat/unison-guardian-hackathon`; record its reviewed merge commit before final submission. All commands below run from `guardian/`. The repository's existing Python benchmark remains a separate component and has its own checks.
+Guardian source is public on [UNISON-StateBench's main branch](https://github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian). [Pull request #24](https://github.com/DeontewattsV1/UNISON-StateBench/pull/24) merged the reviewed integration as commit `ae06eab73316c94a4bd8c2e3a81c99a77bd208da`, which supplies the deployed runtime. All commands below run from `guardian/`. The repository's existing Python benchmark remains a separate component and has its own checks.
 
 The public entry point unconditionally disables `/api/analyze` and needs no model secret. Its anonymous session cookie is not authentication. Enabling paid model requests requires a separate authenticated service and shared rate limiter; adding a key to the public Worker does not enable the endpoint.
 
