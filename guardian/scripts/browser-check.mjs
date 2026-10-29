@@ -57,7 +57,85 @@ async function noDocumentOverflow() {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, 'Document must not overflow horizontally');
 }
 
+async function verifyFreshHatsSessionBootstrap() {
+  // A shared /#hats URL starts with no cookie. Delay the classic registry's
+  // first response so a parallel HATS request cannot silently create a second
+  // browser session whose later Set-Cookie abandons the displayed identities.
+  const freshContext = await browser.newContext({ viewport: { width: 1536, height: 1024 }, acceptDownloads: true, proxy });
+  const freshPage = await freshContext.newPage();
+  let releasedBootstrap = false;
+  let stateRequests = 0;
+  const earlyHatsRequests = [];
+  let completeBootstrap;
+  const bootstrapCompleted = new Promise(resolve => { completeBootstrap = resolve; });
+  freshPage.on('request', request => {
+    if (new URL(request.url()).pathname === '/api/hats' && !releasedBootstrap) earlyHatsRequests.push(request.url());
+  });
+  await freshPage.route('**/api/state', async route => {
+    stateRequests += 1;
+    const response = await route.fetch();
+    await new Promise(resolve => setTimeout(resolve, 300));
+    releasedBootstrap = true;
+    await route.fulfill({ response });
+    completeBootstrap();
+  });
+  try {
+    const firstHatsResponse = freshPage.waitForResponse(response => new URL(response.url()).pathname === '/api/hats' && response.request().method() === 'GET');
+    await freshPage.goto(origin + '/#hats');
+    await bootstrapCompleted;
+    const firstHats = await (await firstHatsResponse).json();
+    assert.equal(stateRequests, 1, 'Fresh HATS navigation establishes one browser session.');
+    assert.deepEqual(earlyHatsRequests, [], 'HATS must wait for the initial session response before requesting its registry.');
+    await freshPage.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1');
+    const displayedRootId = await freshPage.getByLabel('Selected agent', { exact: true }).inputValue();
+    assert.equal(displayedRootId, firstHats.agents[0].id);
+    await freshPage.getByRole('button', { name: 'Spawn child', exact: true }).click();
+    await freshPage.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '2');
+    const exported = freshPage.waitForEvent('download');
+    await freshPage.getByRole('link', { name: 'Export HATS evidence', exact: true }).click();
+    const download = await exported;
+    const filename = path.join(artifacts, 'hats-fresh-session-evidence.json');
+    await download.saveAs(filename);
+    const bundle = JSON.parse(await readFile(filename, 'utf8'));
+    assert.equal(bundle.state.runId, firstHats.runId, 'Export must retain the registry initially displayed after bootstrap.');
+    assert.ok(bundle.state.agents.some(agent => agent.id === displayedRootId));
+    assert.ok(bundle.state.agents.some(agent => agent.parentId === displayedRootId));
+    assert.equal(bundle.state.agents.length, 2, 'The displayed root remains authoritative for manual spawning.');
+    await freshPage.screenshot({ path: path.join(artifacts, 'hats-fresh-session.png'), fullPage: true });
+  } finally { await freshContext.close(); }
+}
+
+async function verifyHatsBootstrapRetry() {
+  const retryContext = await browser.newContext({ viewport: { width: 390, height: 844 }, proxy });
+  const retryPage = await retryContext.newPage();
+  let stateRequests = 0;
+  let hatsRequests = 0;
+  retryPage.on('request', request => { if (new URL(request.url()).pathname === '/api/hats') hatsRequests += 1; });
+  await retryPage.route('**/api/state', async route => {
+    stateRequests += 1;
+    if (stateRequests === 1) return route.fulfill({ status: 503, json: { error: { code: 'TEST_BOOTSTRAP_UNAVAILABLE', message: 'Bootstrap unavailable for regression' } } });
+    return route.fulfill({ response: await route.fetch() });
+  });
+  try {
+    await retryPage.goto(origin + '/#hats');
+    await retryPage.getByRole('alert').filter({ hasText: 'Bootstrap unavailable for regression' }).waitFor();
+    assert.equal(hatsRequests, 0, 'Failed bootstrap cannot mount a competing HATS session client.');
+    const exportControl = retryPage.locator('a[download="unison-guardian-hats-evidence.json"]');
+    assert.equal(await exportControl.getAttribute('href'), null);
+    assert.equal(await exportControl.getAttribute('aria-disabled'), 'true');
+    assert.equal(await retryPage.getByRole('button', { name: 'Spawn child', exact: true }).count(), 0);
+    await retryPage.screenshot({ path: path.join(artifacts, 'hats-bootstrap-retry-mobile.png'), fullPage: true });
+    await retryPage.getByRole('button', { name: 'Retry', exact: true }).click();
+    await retryPage.waitForFunction(() => document.querySelector('[data-testid="hats-agent-count"]')?.textContent === '1');
+    assert.equal(stateRequests, 2);
+    assert.equal(hatsRequests, 1);
+    assert.equal(await exportControl.getAttribute('href'), '/api/hats/evidence');
+  } finally { await retryContext.close(); }
+}
+
 try {
+  await verifyFreshHatsSessionBootstrap();
+  await verifyHatsBootstrapRetry();
   await page.goto(origin);
   await page.waitForFunction(() => document.querySelector('#scenario')?.disabled === false);
   assert.match(await page.title(), /UNISON Guardian/);
@@ -230,5 +308,5 @@ try {
   assert.deepEqual(pageErrors, [], 'No browser runtime errors');
   assert.deepEqual(consoleProblems, [], 'No unexplained console warnings or errors');
   assert.deepEqual(unexpectedFailures, [], 'No unexpected failed resources');
-  console.log(JSON.stringify({ result: 'PASS', origin, viewports: ['1536x1024', '390x844'], checks: ['page identity', 'nonblank', 'no framework overlay', 'no page errors', 'queued denial and PASS', 'alternate witness and FAIL', 'incomplete coverage UNKNOWN', 'evidence download', 'ledger receipt', 'identity separation', 'model proposal isolation and invalidation (mocked)', 'HATS guided boundary assertions', 'HATS manual spawn and ancestor revocation', 'HATS evidence download', 'separate HATS and revocation registries', 'mobile navigation and HATS demo', 'no document overflow'], liveMeta: health.meta.configured ? 'Not exercised by automated test to avoid unrequested billing' : 'Not configured; unavailable state verified', artifacts }, null, 2));
+  console.log(JSON.stringify({ result: 'PASS', origin, viewports: ['1536x1024', '390x844'], checks: ['page identity', 'nonblank', 'no framework overlay', 'no page errors', 'no unexplained console messages', 'queued denial and PASS', 'alternate witness and FAIL', 'incomplete coverage UNKNOWN', 'evidence download', 'ledger receipt', 'identity separation', 'model proposal isolation and invalidation (mocked)', 'fresh HATS session bootstrap ordering and run continuity', 'HATS bootstrap failure and retry', 'HATS guided boundary assertions', 'HATS manual spawn and ancestor revocation', 'HATS evidence download', 'separate HATS and revocation registries', 'mobile navigation and HATS demo', 'shared HATS URL reload', 'no document overflow'], liveMeta: health.meta.configured ? 'Not exercised by automated test to avoid unrequested billing' : 'Not configured; unavailable state verified', artifacts }, null, 2));
 } finally { await browser.close(); }
