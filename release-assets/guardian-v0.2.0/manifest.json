@@ -1,0 +1,24 @@
+{
+  "product": "UNISON Guardian",
+  "version": "0.2.0",
+  "sourceCommit": "a693bfdf041356f2b4bd05d9b8f7c1fce88d7cf1",
+  "runtimeSourceCommit": "ae06eab73316c94a4bd8c2e3a81c99a77bd208da",
+  "sourceFiles": 166,
+  "createdAt": "2026-10-29T10:56:28.035080+00:00",
+  "runtimeInputsMatchDeployedSource": true,
+  "credentialPatternMatches": 0,
+  "artifacts": {
+    "UNISON_StateBench_Guardian_v0.2.0_Source.zip": {
+      "bytes": 269261,
+      "sha256": "23135b310847bcd29c8a943c00126052acc64341bb75e76930bd2796d6930b7c"
+    },
+    "UNISON_Guardian_v0.2.0_Worker.zip": {
+      "bytes": 105927,
+      "sha256": "e3751e93f8aae4f49687bfb4413356db96437ca16d191ddd79390a2402fd8538"
+    },
+    "deployment-record.json": {
+      "bytes": 1412,
+      "sha256": "f02749bde0f9dd019b50593ca471d25de3249bfe22d0cdd6556805796bbb7bad"
+    }
+  }
+}

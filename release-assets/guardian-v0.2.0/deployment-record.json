@@ -1,0 +1,40 @@
+{
+  "product": "UNISON Guardian",
+  "version": "0.2.0",
+  "repository": "https://github.com/DeontewattsV1/UNISON-StateBench",
+  "component": "guardian/",
+  "releaseSourceCommit": "a693bfdf041356f2b4bd05d9b8f7c1fce88d7cf1",
+  "runtimeSourceCommit": "ae06eab73316c94a4bd8c2e3a81c99a77bd208da",
+  "workerSha256": "4345eea98f2f0df94d002c1906f7d62a7abd09e3060209575b08870477d07812",
+  "liveUrl": "https://unison-guardian.info-ccehospitalitygroup.workers.dev",
+  "cloudflareDeploymentId": "9bc7c42e0cd54601bd97987bae3885c1",
+  "durableObjectMigration": "v1",
+  "namespacePreserved": true,
+  "sessionAndQueuedRevocationAcrossDeployment": "PASS",
+  "checks": {
+    "statebenchTests": 104,
+    "pythonVersions": [
+      "3.11",
+      "3.12"
+    ],
+    "guardianBackendTests": 42,
+    "workerTests": 6,
+    "productionBuild": "PASS",
+    "desktopBrowser": "PASS",
+    "mobileBrowser": "PASS",
+    "evidenceInternalConsistency": "PASS",
+    "evidenceOriginTrusted": false
+  },
+  "ci": {
+    "statebench": "https://github.com/DeontewattsV1/UNISON-StateBench/actions/runs/40860198761",
+    "guardian": "https://github.com/DeontewattsV1/UNISON-StateBench/actions/runs/40860198801"
+  },
+  "publicModelRequests": "DISABLED",
+  "liveMetaUsage": "PENDING",
+  "video": "PENDING",
+  "organizerSubmission": "PENDING",
+  "licenseScope": {
+    "existingStateBench": "MIT; prior work",
+    "guardian": "Apache-2.0; new component"
+  }
+}
