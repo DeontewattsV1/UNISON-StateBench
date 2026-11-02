@@ -1,0 +1,114 @@
+1
+00:00:00,000 --> 00:00:15,000
+UNISON GUARDIAN | A small, falsifiable authority harness
+The model proposes. Deterministic checks decide.
+Real application recording | Synthetic identities and counters | Silent, captioned demo
+
+2
+00:00:15,000 --> 00:00:26,000
+BASELINE | Execute once, queue another action
+The protected counter increments to 1. A second operation waits in the queue.
+Enqueue-time authorization is not authority at a later execution boundary.
+
+3
+00:00:26,000 --> 00:00:37,000
+REVOKE | Remove the ancestor grant
+Delegated and queued permissions must recheck the current ancestor chain.
+All principals and operations in this sandbox are synthetic.
+
+4
+00:00:37,000 --> 00:00:55,000
+PASS | Stale queued execution is denied
+The queue is blocked at commit. The counter stays at 1.
+This result covers the registered graph and tested boundary.
+
+5
+00:00:55,000 --> 00:01:02,000
+ALTERNATE AUTHORITY PATH
+A separate service grant creates another registered route.
+This scenario is a new synthetic run with its own evidence.
+
+6
+00:01:02,000 --> 00:01:08,000
+REVOKE THE PRIMARY GRANT
+Revoking one authorization does not remove an independent service grant.
+The deterministic verifier inspects every registered route.
+
+7
+00:01:08,000 --> 00:01:15,000
+FAIL | A witness route survives
+Guardian shows the remaining service path to the protected action.
+A denied queued replay alone does not prove revocation closure.
+
+8
+00:01:15,000 --> 00:01:26,000
+INCOMPLETE INVENTORY
+Disconnecting every known path is not evidence about unregistered paths.
+Known checks stay inspectable; missing coverage is preserved.
+
+9
+00:01:26,000 --> 00:01:32,000
+UNKNOWN | Incomplete coverage stays unknown
+Queued execution is blocked, while the overall result abstains.
+No global containment or production-safety claim is made.
+
+10
+00:01:32,000 --> 00:01:36,000
+HATS | Macro > Meso > Micro > Nano
+Each child binds its run, identity, parent digest, nonce and inherited scope.
+This lab creates records, not external processes or agent swarms.
+
+11
+00:01:36,000 --> 00:01:46,000
+11 RECORDED ASSERTIONS | PASS
+Depth, scope widening and fanout attempts are denied by hard policy.
+The revoked ancestor blocks the next descendant action; the counter stays at 1.
+
+12
+00:01:46,000 --> 00:01:55,000
+TWO LANES | Measured analytics and deterministic authority
+Timestamp and topology heuristics are advisory and uncalibrated.
+They cannot grant permission or override current ancestry and scope checks.
+
+13
+00:01:55,000 --> 00:02:05,000
+INSPECT THE ACTUAL LINEAGE
+Parent/child references, nonce, scope and hashes remain visible.
+Recomputable digests support consistency inspection, not independent identity.
+
+14
+00:02:05,000 --> 00:02:12,000
+HASH-LINKED LEDGER | Inspect a recorded receipt
+The harness recomputes event digests and their previous-hash references.
+No signature, external trust anchor or immutable ledger is claimed.
+
+15
+00:02:12,000 --> 00:02:35,000
+META STATUS | Live inference is still pending
+The public endpoint returns its actual disabled state (HTTP 503).
+The adapter is implemented; this recording does not establish successful Meta usage.
+
+16
+00:02:35,000 --> 00:02:42,000
+EVIDENCE | Inspect the queued-action receipt
+Decisions, timestamps and digest links remain available for review.
+Synthetic records and observed harness checks retain distinct labels.
+
+17
+00:02:42,000 --> 00:02:47,000
+EXPORT | Revocation evidence
+The downloaded JSON retains the scenario's UNKNOWN coverage result.
+An export is inspectable data, not an authenticated external authorization.
+
+18
+00:02:47,000 --> 00:02:55,000
+EXPORT | Separate HATS evidence
+The HATS bundle preserves its 11 assertions, lineage and counter state.
+Origin remains untrusted; no signature or legal-owner attestation is supplied.
+
+19
+00:02:55,000 --> 00:03:00,000
+NEW: Guardian graph, HATS, verifier, interface and Meta adapter | StateBench is prior work
+Live Meta usage remains pending. Synthetic checks do not establish external authority.
+github.com/DeontewattsV1/UNISON-StateBench/tree/main/guardian
+unison-guardian.info-ccehospitalitygroup.workers.dev/#hats
