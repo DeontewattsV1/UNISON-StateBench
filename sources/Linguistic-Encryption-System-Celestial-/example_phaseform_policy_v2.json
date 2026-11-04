@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.5",
+  "creator": "TDD",
+  "identity": {
+    "role": "principal_phaseform_operator",
+    "clearance": "L4_SOVEREIGN",
+    "project": "PhaseForm"
+  },
+  "capabilities": {
+    "can_generate_code": true,
+    "can_access_l3_controller": true,
+    "can_reconfigure_l2": true,
+    "can_bypass_leash": false
+  },
+  "policy_logic": {
+    "on_damage_detected": "LOCK_AND_ALERT",
+    "on_integrity_failure": "PURGE_MEMORY_AND_HALT",
+    "on_unauthorized_access": "LOCK_AND_ALERT"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "content_type": "aletheia_lattice_threat_control_matrix",
+  "creator": "TDD",
+  "document": "ALETHEIA LATTICE \u2014 DIA Deployment Architecture Revision 2.0",
+  "threat_categories": [
+    {
+      "category": "training_data_poisoning",
+      "controls": [
+        "SanitasSwarm ingestion scrubbing",
+        "statistical anomaly detection at ingestion",
+        "scheduled adversarial injection red-team testing"
+      ],
+      "residual_risk": "Sophisticated poisoning that stays within normal statistical bounds may bypass initial detection."
+    },
+    {
+      "category": "model_inversion_and_extraction",
+      "controls": [
+        "output rate limiting",
+        "query-pattern monitoring",
+        "differential privacy controls",
+        "no raw logits or embedding vectors to end-user terminals",
+        "canary outputs with cryptographic watermarks"
+      ],
+      "residual_risk": "Low-rate extraction attempts may remain below detection thresholds."
+    },
+    {
+      "category": "direct_prompt_injection",
+      "controls": [
+        "LogosScythe ingress analysis",
+        "semantic deception detection",
+        "authority-forgery and urgency-forcing detection"
+      ],
+      "residual_risk": "Novel or blended injection patterns may require updated detection heuristics."
+    },
+    {
+      "category": "indirect_prompt_injection_via_retrieval",
+      "controls": [
+        "signed provenance on retrieval results",
+        "quarantine of unsigned retrieved content",
+        "retrieval-backed synthesis only from attributed sources"
+      ],
+      "residual_risk": "Trusted but compromised sources can still introduce misleading context."
+    },
+    {
+      "category": "harvest_now_decrypt_later",
+      "controls": [
+        "ML-KEM for key encapsulation",
+        "ML-DSA for signing",
+        "SLH-DSA for long-term archival",
+        "algorithm agility design requirement"
+      ],
+      "residual_risk": "Future cryptanalytic or implementation-level failures may require algorithm rotation."
+    }
+  ]
+}
