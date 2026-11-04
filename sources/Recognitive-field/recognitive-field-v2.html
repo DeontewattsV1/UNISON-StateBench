@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recognitive Field — OK Computer v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ─────────────────────────────────────── */
+    :root {
+      --ink: #05070a;
+      --surface: #0b0e14;
+      --card: rgba(12, 15, 21, 0.88);
+      --card-lit: rgba(16, 20, 28, 0.94);
+      --border: rgba(255,255,255,.08);
+      --border-bright: rgba(255,255,255,.14);
+      --ghost: rgba(255,255,255,.04);
+      --text: #dde4ee;
+      --dim: #7a8699;
+      --faint: #3d4655;
+
+      /* phosphor spectrum */
+      --p-cyan: #1df5e8;
+      --p-cyan-dim: #0d7e78;
+      --p-amber: #f5b61d;
+      --p-amber-dim: #7a5b0e;
+      --p-green: #1df55e;
+      --p-red: #f5411d;
+      --p-blue: #1d9ef5;
+
+      --r: 14px;
+      --r-sm: 10px;
+      --shadow-deep: 0 24px 80px rgba(0,0,0,.6);
+      --shadow-glow-c: 0 0 40px rgba(29,245,232,.08);
+
+      /* transitions */
+      --t-fast: 120ms cubic-bezier(.4,0,.2,1);
+      --t-med: 280ms cubic-bezier(.4,0,.2,1);
+      --t-slow: 520ms cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─── RESET & BASE ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--ink);
+      color: var(--text);
+      font-family: 'Instrument Sans', sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select { font: inherit; }
+
+    /* ─── LAYOUT SHELL ──────────────────────────────────────── */
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ─── ATMOSPHERE LAYERS ─────────────────────────────────── */
+    .noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .065;
+      /* SVG-free noise via CSS repeating-conic-gradient */
+      background-image:
+        repeating-conic-gradient(rgba(255,255,255,.03) 0% 25%, transparent 0% 50%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(29,245,232,.05) 0%, transparent 55%);
+      background-size: 3px 3px, 100% 100%;
+    }
+
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 35%, rgba(0,0,0,.62) 100%);
+    }
+
+    .scan-lines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .028;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.4) 2px,
+        rgba(0,0,0,.4) 4px
+      );
+    }
+
+    /* ─── PANEL SYSTEM ──────────────────────────────────────── */
+    .panel {
+      position: absolute;
+      background: var(--card);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(20px) saturate(1.4);
+      box-shadow: var(--shadow-deep);
+      border-radius: var(--r);
+      transition: opacity var(--t-slow), transform var(--t-slow);
+    }
+
+    .panel.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+    }
+
+    /* ─── PANEL POSITIONS ───────────────────────────────────── */
+    .panel-hero   { top: 20px; left: 20px; width: min(400px, calc(100vw - 40px)); padding: 22px; }
+    .panel-ctrl   { top: 20px; right: 20px; width: min(340px, calc(100vw - 40px)); padding: 18px; }
+    .panel-script { bottom: 20px; left: 20px; width: min(500px, calc(100vw - 40px)); padding: 18px; }
+    .panel-legend { bottom: 20px; right: 20px; width: min(340px, calc(100vw - 40px)); padding: 18px; }
+
+    /* presenter mode hides the side panels */
+    body.presenter .panel-hero,
+    body.presenter .panel-script,
+    body.presenter .panel-legend { opacity: 0; pointer-events: none; }
+
+    body.presenter .panel-ctrl { opacity: .92; }
+
+    /* ─── TYPOGRAPHY ────────────────────────────────────────── */
+    .serif { font-family: 'DM Serif Display', Georgia, serif; }
+    .mono  { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--p-cyan);
+      opacity: .82;
+      margin-bottom: 12px;
+    }
+
+    .eyebrow .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--p-cyan);
+      box-shadow: 0 0 12px var(--p-cyan);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--p-cyan); }
+      50% { opacity: .5; box-shadow: 0 0 4px var(--p-cyan); }
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(26px, 3.6vw, 38px);
+      line-height: 1.02;
+      letter-spacing: -.02em;
+      color: #edf2f8;
+      margin-bottom: 12px;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--p-cyan);
+    }
+
+    .lede {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #a0abbe;
+      margin-bottom: 16px;
+    }
+
+    .label-xs {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 8px;
+    }
+
+    /* ─── STAT GRID ─────────────────────────────────────────── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat-cell {
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
+      background: var(--ghost);
+      border: 1px solid var(--border);
+    }
+
+    .stat-cell .k {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 5px;
+    }
+
+    .stat-cell .v {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #d0dae8;
+      line-height: 1.3;
+    }
+
+    /* ─── SCENARIO BUTTONS ──────────────────────────────────── */
+    .scenario-btns {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .scenario-btns button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--ghost);
+      color: var(--dim);
+      padding: 10px 8px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .02em;
+      transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scenario-btns button::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent);
+      opacity: 0;
+      transition: opacity var(--t-fast);
+    }
+
+    .scenario-btns button:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+
+    .scenario-btns button:hover::after { opacity: 1; }
+
+    .scenario-btns button.active {
+      background: rgba(29,245,232,.08);
+      border-color: rgba(29,245,232,.32);
+      color: var(--p-cyan);
+      box-shadow: 0 0 20px rgba(29,245,232,.06) inset, 0 0 0 1px rgba(29,245,232,.06) inset;
+    }
+
+    .btn-shortcut {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      opacity: .5;
+      margin-top: 3px;
+    }
+
+    /* ─── τ SLIDER ──────────────────────────────────────────── */
+    .tau-block {
+      padding: 14px;
+      border-radius: var(--r-sm);
+      background: var(--ghost);
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    .tau-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .tau-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #c8d5e6;
+    }
+
+    .tau-subtitle {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    .tau-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(29,245,232,.07);
+      border: 1px solid rgba(29,245,232,.18);
+      color: var(--p-cyan);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      appearance: none;
+      background: linear-gradient(90deg, var(--p-amber-dim), rgba(255,255,255,.1), var(--p-cyan-dim));
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+      margin: 4px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--p-cyan);
+      box-shadow: 0 0 14px rgba(29,245,232,.6);
+      border: 2px solid rgba(0,0,0,.4);
+      transition: transform var(--t-fast), box-shadow var(--t-fast);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 22px rgba(29,245,232,.9);
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--faint);
+      margin-top: 6px;
+    }
+
+    /* ─── LIVE METERS ───────────────────────────────────────── */
+    .meters { display: grid; gap: 9px; }
+
+    .meter .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .meter .name {
+      font-size: 11.5px;
+      color: #a8b4c6;
+    }
+
+    .meter .val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--p-cyan);
+      min-width: 32px;
+      text-align: right;
+      transition: color var(--t-med);
+    }
+
+    .meter .val.danger { color: var(--p-amber); }
+
+    .track {
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.04);
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 500ms cubic-bezier(.4,0,.2,1), background-color 500ms;
+      background: linear-gradient(90deg, var(--p-cyan-dim), var(--p-cyan));
+    }
+
+    .fill.load    { background: linear-gradient(90deg, var(--p-amber-dim), var(--p-amber)); }
+    .fill.turb    { background: linear-gradient(90deg, var(--p-amber-dim), var(--p-red)); }
+
+    /* ─── SCENARIO CALLOUT ──────────────────────────────────── */
+    .scene-callout {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: var(--r-sm);
+      border-left: 2px solid var(--p-cyan);
+      background: rgba(29,245,232,.04);
+      transition: border-color var(--t-slow), background var(--t-slow);
+    }
+
+    .scene-callout.overload {
+      border-left-color: var(--p-amber);
+      background: rgba(245,182,29,.04);
+    }
+
+    .scene-callout.ritual {
+      border-left-color: var(--p-green);
+      background: rgba(29,245,94,.04);
+    }
+
+    .scene-callout p {
+      font-size: 12.5px;
+      line-height: 1.58;
+      color: #b4c0d2;
+    }
+
+    /* ─── CONTROLS ROW ──────────────────────────────────────── */
+    .ctrl-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--ghost);
+      color: var(--dim);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: .02em;
+      transition: all var(--t-fast);
+    }
+
+    .btn-action:hover {
+      color: var(--text);
+      border-color: var(--border-bright);
+      background: rgba(255,255,255,.07);
+    }
+
+    .btn-action.active-pause {
+      color: var(--p-amber);
+      border-color: rgba(245,182,29,.3);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(29,245,94,.06);
+      border: 1px solid rgba(29,245,94,.18);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--p-green);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--p-green);
+      box-shadow: 0 0 10px var(--p-green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* ─── PRESENTER SCRIPT PANEL ────────────────────────────── */
+    .script-text {
+      font-size: 13.5px;
+      line-height: 1.68;
+      color: #c0cede;
+      font-style: italic;
+      font-family: 'DM Serif Display', serif;
+      margin-bottom: 14px;
+      padding-left: 14px;
+      border-left: 1px solid rgba(29,245,232,.25);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--ghost);
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+      color: #aab8cc;
+    }
+
+    .chip .swatch {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ─── LEGEND / WHY PANEL ────────────────────────────────── */
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .legend-row .line-seg {
+      width: 32px; height: 3px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .legend-row .label {
+      font-size: 12.5px;
+      color: #a0abbe;
+      line-height: 1.4;
+    }
+
+    .footer-hint {
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--faint);
+      line-height: 1.5;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px; height: 20px;
+      padding: 0 6px;
+      border-radius: 5px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border-bright);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #8a98aa;
+    }
+
+    /* ─── FLOATING 3D LABELS ────────────────────────────────── */
+    .float-label {
+      position: absolute;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      transition: opacity var(--t-med);
+      text-shadow: 0 1px 4px rgba(0,0,0,.8);
+    }
+
+    .float-label.attractor {
+      color: #a8fbf5;
+      background: rgba(4,12,14,.65);
+      border: 1px solid rgba(29,245,232,.2);
+    }
+
+    .float-label.turbulence {
+      color: #f5e0a0;
+      background: rgba(14,10,4,.65);
+      border: 1px solid rgba(245,182,29,.22);
+    }
+
+    .float-label.axis {
+      font-size: 10px;
+      color: #6e7e94;
+      background: rgba(6,8,12,.45);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+
+    /* ─── PRESENTER MODE TOGGLE ─────────────────────────────── */
+    #presenterToggle {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--dim);
+      padding: 7px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      backdrop-filter: blur(16px);
+      transition: all var(--t-fast);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #presenterToggle:hover {
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+
+    body.presenter #presenterToggle {
+      color: var(--p-cyan);
+      border-color: rgba(29,245,232,.3);
+    }
+
+    /* ─── DEMO STEP INDICATOR ───────────────────────────────── */
+    .step-track {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--faint);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all var(--t-fast);
+    }
+
+    .step-dot.active {
+      background: var(--p-cyan);
+      box-shadow: 0 0 10px var(--p-cyan);
+      border-color: var(--p-cyan);
+    }
+
+    .step-dot.done {
+      background: var(--p-cyan-dim);
+      border-color: var(--p-cyan-dim);
+    }
+
+    .step-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      html, body { overflow: auto; }
+      #app { min-height: 1500px; height: auto; }
+      .panel { position: relative; left: auto; right: auto; top: auto; bottom: auto; margin: 12px; width: calc(100vw - 24px); }
+      canvas { position: fixed; height: 100vh; }
+      #presenterToggle { display: none; }
+    }
+
+    /* ─── FADE IN ON LOAD ────────────────────────────────────── */
+    .panel { animation: fadeUp .6s cubic-bezier(.4,0,.2,1) both; }
+    .panel-hero   { animation-delay: .05s; }
+    .panel-ctrl   { animation-delay: .12s; }
+    .panel-script { animation-delay: .20s; }
+    .panel-legend { animation-delay: .28s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <canvas id="field"></canvas>
+  <div class="noise"></div>
+  <div class="vignette"></div>
+  <div class="scan-lines"></div>
+
+  <!-- Presenter mode toggle -->
+  <button id="presenterToggle">Demo Mode  <span class="kbd">P</span></button>
+
+  <!-- ── HERO PANEL ─────────────────────────────────────────── -->
+  <section class="panel panel-hero">
+    <div class="eyebrow"><span class="live-dot"></span>Cognitive State Visualization · v2.0</div>
+    <h1>Recognitive<br><em>Field</em></h1>
+    <p class="lede">A live system map of how attention, memory load, and grounding move toward either recovery or confusion. The point is not the graphic — the point is that cognitive drift becomes <em>visible, discussable, and designable.</em></p>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <div class="k">Cyan paths</div>
+        <div class="v">Recovery orbit → attractor</div>
+      </div>
+      <div class="stat-cell">
+        <div class="k">Amber paths</div>
+        <div class="v">Turbulence / overload</div>
+      </div>
+      <div class="stat-cell">
+        <div class="k">Attractor node</div>
+        <div class="v">Pause → Notice → Return</div>
+      </div>
+      <div class="stat-cell">
+        <div class="k">τ slider</div>
+        <div class="v">Temporal bias (past ↔ future)</div>
+      </div>
+    </div>
+
+    <div class="footer-hint">
+      <span class="kbd">drag</span> orbit · <span class="kbd">scroll</span> zoom · <span class="kbd">dbl-click</span> reset · <span class="kbd">P</span> demo mode
+    </div>
+  </section>
+
+  <!-- ── CONTROLS PANEL ─────────────────────────────────────── -->
+  <section class="panel panel-ctrl">
+    <div class="label-xs">Scenario</div>
+
+    <div class="scenario-btns">
+      <button id="btnBaseline" class="active">
+        Baseline
+        <span class="btn-shortcut">key 1</span>
+      </button>
+      <button id="btnOverload">
+        Overload
+        <span class="btn-shortcut">key 2</span>
+      </button>
+      <button id="btnRitual">
+        Ritual Reset
+        <span class="btn-shortcut">key 3</span>
+      </button>
+    </div>
+
+    <div class="tau-block">
+      <div class="tau-header">
+        <div>
+          <div class="tau-title">τ — Temporal Orientation</div>
+          <div class="tau-subtitle">Narrative pull: past rumination → future projection</div>
+        </div>
+        <div id="tauPill" class="tau-pill">0.00</div>
+      </div>
+      <input id="tauRange" type="range" min="-1" max="1" step="0.01" value="0">
+      <div class="range-labels">
+        <span>Past</span>
+        <span>Present</span>
+        <span>Future</span>
+      </div>
+    </div>
+
+    <div class="label-xs">Live System Readout</div>
+    <div class="meters">
+      <div class="meter">
+        <div class="row"><span class="name">Attention stability</span><span id="vAttention" class="val">0.63</span></div>
+        <div class="track"><div id="bAttention" class="fill" style="width:63%"></div></div>
+      </div>
+      <div class="meter">
+        <div class="row"><span class="name">Memory load</span><span id="vMemory" class="val">0.42</span></div>
+        <div class="track"><div id="bMemory" class="fill load" style="width:42%"></div></div>
+      </div>
+      <div class="meter">
+        <div class="row"><span class="name">Grounding</span><span id="vGrounding" class="val">0.70</span></div>
+        <div class="track"><div id="bGrounding" class="fill" style="width:70%"></div></div>
+      </div>
+      <div class="meter">
+        <div class="row"><span class="name">Turbulence</span><span id="vTurbulence" class="val">0.28</span></div>
+        <div class="track"><div id="bTurbulence" class="fill turb" style="width:28%"></div></div>
+      </div>
+    </div>
+
+    <div id="sceneCallout" class="scene-callout">
+      <p id="sceneCopy">Baseline keeps the field legible. The attractor is visible, turbulence is present but not dominant, and most trajectories still find recovery.</p>
+    </div>
+
+    <div class="ctrl-row">
+      <button id="btnPlayPause" class="btn-action">Pause <span class="kbd">Space</span></button>
+      <button id="btnCamera" class="btn-action">Reset camera</button>
+      <span class="status-badge"><span class="dot"></span>LIVE</span>
+    </div>
+  </section>
+
+  <!-- ── SCRIPT PANEL ───────────────────────────────────────── -->
+  <section class="panel panel-script">
+    <div class="label-xs">Presenter Talk Track</div>
+
+    <div class="step-track">
+      <div class="step-dot active" data-step="0" title="Baseline intro"></div>
+      <div class="step-dot" data-step="1" title="τ demonstration"></div>
+      <div class="step-dot" data-step="2" title="Overload"></div>
+      <div class="step-dot" data-step="3" title="Ritual Reset"></div>
+      <div class="step-dot" data-step="4" title="Key claim"></div>
+      <span class="step-label" id="stepLabel">Step 1 of 5 — Baseline</span>
+    </div>
+
+    <p id="scriptText" class="script-text">"This cube is the cognitive state space. X is attention coherence, Y is memory load, Z is grounding. The bright node is the recovery attractor: Pause, Notice, Return. Cyan paths show successful re-regulation. Amber shows destabilization under overload."</p>
+
+    <div class="divider"></div>
+
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#1df5e8"></span>Recovery orbit</div>
+      <div class="chip"><span class="swatch" style="background:#f5b61d"></span>Turbulence zone</div>
+      <div class="chip"><span class="swatch" style="background:#1df55e"></span>Stable attractor</div>
+      <div class="chip"><span class="swatch" style="background:#7a8699"></span>Vector field</div>
+    </div>
+
+    <div class="footer-hint" style="margin-top:12px">
+      Mental model: closer to a weather map than a moral judgment. Shows conditions, tendencies, and intervention windows — not fixed identity.
+    </div>
+  </section>
+
+  <!-- ── LEGEND PANEL ───────────────────────────────────────── -->
+  <section class="panel panel-legend">
+    <div class="label-xs">Why this version works</div>
+
+    <div class="legend-row">
+      <div class="line-seg" style="background:linear-gradient(90deg,#0d7e78,#1df5e8)"></div>
+      <div class="label">Recovery remains readable at a glance</div>
+    </div>
+    <div class="legend-row">
+      <div class="line-seg" style="background:linear-gradient(90deg,#1df5e8,#f5b61d)"></div>
+      <div class="label">Breakdown happens progressively, not suddenly</div>
+    </div>
+    <div class="legend-row">
+      <div class="line-seg" style="background:linear-gradient(90deg,#f5b61d,#f5411d)"></div>
+      <div class="label">Overload has a visible, distinct signature</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="font-size:12.5px; color:#8a98aa; line-height:1.58; margin-bottom:14px">
+      Original artifact had atmosphere. This version adds framing, live metrics, scenario switching, and speaking cues — so any presenter can tell a coherent story live, without preparation.
+    </div>
+
+    <div class="footer-hint">
+      <span class="kbd">1</span><span class="kbd">2</span><span class="kbd">3</span> scenarios · <span class="kbd">Space</span> pause · <span class="kbd">P</span> presenter mode
+    </div>
+  </section>
+
+  <!-- floating 3D axis labels -->
+  <div id="lAttractor"  class="float-label attractor">Recovery attractor · Pause → Notice → Return</div>
+  <div id="lTurbulence" class="float-label turbulence">Turbulence / overload zone</div>
+  <div id="lX"  class="float-label axis">attention coherence</div>
+  <div id="lY"  class="float-label axis">memory load</div>
+  <div id="lZ"  class="float-label axis">grounding</div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ─── SCENARIO DATA ────────────────────────────────────── */
+  const SCENARIOS = {
+    baseline: {
+      key: 'baseline',
+      copy: 'Baseline keeps the field legible. The attractor is visible, turbulence is present but not dominant, and most trajectories find recovery.',
+      calloutClass: '',
+      metrics: { attention:.63, memory:.42, grounding:.70, turbulence:.28 },
+      turbulenceShift: 0, attractorPull: 1.00, drift: 0
+    },
+    overload: {
+      key: 'overload',
+      copy: 'Overload raises memory pressure and destabilizes attention. More paths bend toward amber turbulence before they can recover.',
+      calloutClass: 'overload',
+      metrics: { attention:.34, memory:.84, grounding:.38, turbulence:.82 },
+      turbulenceShift: .15, attractorPull: .68, drift: .08
+    },
+    ritual: {
+      key: 'ritual',
+      copy: 'Ritual Reset increases grounding and restores the attractor\'s pull. The field does not become perfect; it becomes recoverable.',
+      calloutClass: 'ritual',
+      metrics: { attention:.79, memory:.30, grounding:.88, turbulence:.18 },
+      turbulenceShift: -.08, attractorPull: 1.25, drift: -.03
+    }
+  };
+
+  /* ─── PRESENTER SCRIPT STEPS ───────────────────────────── */
+  const STEPS = [
+    { label: 'Step 1 of 5 — Baseline',        text: '"This cube is the cognitive state space. X is attention coherence, Y is memory load, Z is grounding. The bright node is the recovery attractor: Pause, Notice, Return. Cyan paths show re-regulation. Amber paths show destabilization."' },
+    { label: 'Step 2 of 5 — τ slider',         text: '"When I move τ left, the system ruminating on the past — attention fragments, grounding drops. Moving right pushes it into anxious future-projection. Present-bias is the stable center."' },
+    { label: 'Step 3 of 5 — Overload',         text: '"Under overload, memory pressure climbs past 80%, the attractor weakens, and most trajectories spiral into the amber turbulence zone instead of recovering. This is cognitive capture."' },
+    { label: 'Step 4 of 5 — Ritual Reset',     text: '"Ritual Reset does not eliminate turbulence. It restores grounding so the attractor can reassert pull. Paths still start in noise — they just find their way back."' },
+    { label: 'Step 5 of 5 — Key Claim',        text: '"This is a live cognitive field model. Cyan shows recovery. Amber shows overload. The value is that drift becomes visible, discussable, and designable — for any system that has a self."' }
+  ];
+
+  /* ─── DOM REFS ─────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+  const app       = $('app');
+  const canvas    = $('field');
+  const ctx       = canvas.getContext('2d');
+  const els = {
+    tauRange: $('tauRange'), tauPill: $('tauPill'),
+    btnBaseline: $('btnBaseline'), btnOverload: $('btnOverload'), btnRitual: $('btnRitual'),
+    btnPlayPause: $('btnPlayPause'), btnCamera: $('btnCamera'),
+    presenterToggle: $('presenterToggle'),
+    sceneCopy: $('sceneCopy'), sceneCallout: $('sceneCallout'),
+    scriptText: $('scriptText'), stepLabel: $('stepLabel'),
+    vAttention: $('vAttention'), vMemory: $('vMemory'), vGrounding: $('vGrounding'), vTurbulence: $('vTurbulence'),
+    bAttention: $('bAttention'), bMemory: $('bMemory'), bGrounding: $('bGrounding'), bTurbulence: $('bTurbulence'),
+    lAttractor: $('lAttractor'), lTurbulence: $('lTurbulence'), lX: $('lX'), lY: $('lY'), lZ: $('lZ'),
+    stepDots: document.querySelectorAll('.step-dot')
+  };
+
+  /* ─── STATE ─────────────────────────────────────────────── */
+  const state = {
+    w: 0, h: 0, dpr: Math.max(1, window.devicePixelRatio || 1),
+    yaw: -0.78, pitch: 0.48, zoom: 1.18,
+    dragging: false, lastX: 0, lastY: 0,
+    time: 0, running: true,
+    tau: 0,
+    scenario: 'baseline',
+    ptScale: 760,
+    center: { x:.5, y:.5, z:.5 },
+    presenterMode: false,
+    demoStep: 0
+  };
+
+  /* ─── GEOMETRY CONSTANTS ────────────────────────────────── */
+  const ATTR_PT  = { x:.80, y:.26, z:.80 };
+  const TURB_BASE= { x:.52, y:.82, z:.30 };
+
+  let trajectories = [];
+
+  /* ─── MATH HELPERS ──────────────────────────────────────── */
+  const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+  const lerp  = (a,b,t) => a + (b-a)*t;
+  const add   = (a,b) => ({x:a.x+b.x, y:a.y+b.y, z:a.z+b.z});
+  const sub   = (a,b) => ({x:a.x-b.x, y:a.y-b.y, z:a.z-b.z});
+  const mul   = (a,s) => ({x:a.x*s, y:a.y*s, z:a.z*s});
+  const len   = v => Math.hypot(v.x, v.y, v.z);
+  const norm  = v => { const l = len(v) || 1; return {x:v.x/l, y:v.y/l, z:v.z/l}; };
+  const dist  = (a,b) => len(sub(a,b));
+  const smoothstep = (e0,e1,x) => { const t = clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); };
+
+  function lerpColor(a, b, t) {
+    const ar=(a>>16)&255, ag=(a>>8)&255, ab=a&255;
+    const br=(b>>16)&255, bg=(b>>8)&255, bb=b&255;
+    return `rgb(${~~lerp(ar,br,t)},${~~lerp(ag,bg,t)},${~~lerp(ab,bb,t)})`;
+  }
+
+  /* ─── PROJECTION ────────────────────────────────────────── */
+  function rotate(p) {
+    let x = p.x - state.center.x;
+    let y = p.y - state.center.y;
+    let z = p.z - state.center.z;
+    const cy = Math.cos(state.yaw), sy = Math.sin(state.yaw);
+    const x1 = cy*x + sy*z, z1 = -sy*x + cy*z;
+    const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
+    return { x:x1, y:cp*y - sp*z1, z:sp*y + cp*z1 };
+  }
+
+  function project(p) {
+    const r = rotate(p);
+    const depth = 2.7 + r.z * state.zoom;
+    const scale = state.ptScale / depth;
+    return { x: state.w/2 + r.x*scale, y: state.h/2 - r.y*scale, depth, visible: depth > 0.25 };
+  }
+
+  /* ─── FIELD DYNAMICS ────────────────────────────────────── */
+  function turbulenceCenter() {
+    const s = SCENARIOS[state.scenario];
+    return {
+      x: clamp(TURB_BASE.x + s.turbulenceShift + state.tau*.06, .18, .88),
+      y: clamp(TURB_BASE.y + Math.abs(state.tau)*.06, .2, .94),
+      z: clamp(TURB_BASE.z - state.tau*.08, .12, .88)
+    };
+  }
+
+  function flow(p) {
+    const s = SCENARIOS[state.scenario];
+    const turb = turbulenceCenter();
+    const tau = state.tau;
+    const dA = dist(p, ATTR_PT);
+    const dT = dist(p, turb);
+
+    const pull = s.attractorPull * (.92 - Math.abs(tau)*.18 + (tau > 0 ? .06 : 0));
+    const baseDrift = { x:.016+tau*.014+s.drift, y:.004+Math.abs(tau)*.01, z:.018-tau*.008 };
+
+    if (dA < .62 && dT > .36) {
+      const v = mul(norm(sub(ATTR_PT, p)), .046 * pull);
+      const orbit = mul(norm({x:-(p.z-ATTR_PT.z), y:.018+tau*.01, z:(p.x-ATTR_PT.x)}), .022+(1-pull)*.005);
+      return add(v, orbit);
+    } else if (dT < .54) {
+      const swirl = norm({
+        x:(p.z-turb.z)*(1.55+Math.abs(tau)*.35),
+        y:(turb.y-p.y)*.62+.08+s.metrics.memory*.03,
+        z:-(p.x-turb.x)*(1.55+Math.abs(tau)*.35)
+      });
+      let v = mul(swirl, .058+s.metrics.turbulence*.018);
+      v.x += tau*.018; v.y += .005+Math.abs(tau)*.01;
+      return v;
+    } else {
+      return add(baseDrift, mul(norm(sub(ATTR_PT, p)), .014*pull));
+    }
+  }
+
+  /* ─── TRAJECTORY BUILDER ────────────────────────────────── */
+  function buildTrajectories() {
+    const s = SCENARIOS[state.scenario];
+    const paths = [];
+    const total = 26;
+    const recoveryCount = Math.round(total * (.62 + (s.metrics.attention - s.metrics.turbulence) * .18));
+
+    for (let i = 0; i < total; i++) {
+      const recovery = i < recoveryCount;
+      let pos = {
+        x: clamp(.18 + Math.random()*.18 + (state.tau > 0 ? .02 : 0), .04, .96),
+        y: clamp(.16 + Math.random()*.16 + Math.abs(state.tau)*.04, .04, .96),
+        z: clamp(.16 + Math.random()*.18 + (state.tau < 0 ? .03 : 0), .04, .96)
+      };
+      if (!recovery) {
+        pos.x = clamp(pos.x + .06, .04, .96);
+        pos.y = clamp(pos.y + .12, .04, .96);
+        pos.z = clamp(pos.z - .04, .04, .96);
+      }
+
+      const pts = [];
+      for (let step = 0; step < 140; step++) {
+        pts.push({...pos});
+        let f = flow(pos);
+        f.x += (Math.random()-.5)*.0045;
+        f.y += (Math.random()-.5)*.0045;
+        f.z += (Math.random()-.5)*.0045;
+        pos = { x:clamp(pos.x+f.x,0,1), y:clamp(pos.y+f.y,0,1), z:clamp(pos.z+f.z,0,1) };
+      }
+      paths.push({ pts, recovery });
+    }
+    return paths;
+  }
+
+  /* ─── DRAW HELPERS ──────────────────────────────────────── */
+  function line3D(a, b, color, width=1, alpha=1, dash=false) {
+    const pa = project(a), pb = project(b);
+    if (!pa.visible && !pb.visible) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash([4,6]);
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function sphere3D(p, r, color, glow=false) {
+    const q = project(p);
+    if (!q.visible) return;
+    const rr = Math.max(1, r * (state.ptScale / q.depth));
+    if (glow) {
+      const g = ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,rr*5);
+      g.addColorStop(0,'rgba(29,245,232,.85)');
+      g.addColorStop(.3,'rgba(29,245,232,.22)');
+      g.addColorStop(1,'rgba(29,245,232,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, rr*5, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(q.x, q.y, rr, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  /* ─── SCENE LAYERS ──────────────────────────────────────── */
+  function drawBackdrop() {
+    const bg = ctx.createRadialGradient(state.w*.5, state.h*.35, 0, state.w*.5, state.h*.5, state.w*.8);
+    bg.addColorStop(0, '#0d1220');
+    bg.addColorStop(.5, '#08090f');
+    bg.addColorStop(1, '#030406');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, state.w, state.h);
+
+    // faint star field
+    for (let i = 0; i < 90; i++) {
+      const x = ((i * 137.5) % state.w);
+      const y = ((i * 79.3)  % state.h);
+      const r = (i % 4) * .4 + .3;
+      ctx.fillStyle = `rgba(255,255,255,${.02 + (i%6)*.008})`;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function drawBox() {
+    const corners = [
+      {x:0,y:0,z:0},{x:1,y:0,z:0},{x:1,y:0,z:1},{x:0,y:0,z:1},
+      {x:0,y:1,z:0},{x:1,y:1,z:0},{x:1,y:1,z:1},{x:0,y:1,z:1}
+    ];
+    const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+    edges.forEach(([a,b]) => line3D(corners[a], corners[b], 'rgba(100,120,148,.58)', 1.3, .85));
+
+    // grid
+    for (let i = .2; i < 1; i += .2) {
+      line3D({x:i,y:0,z:0},{x:i,y:0,z:1},'rgba(70,85,105,.22)',1,1);
+      line3D({x:0,y:0,z:i},{x:1,y:0,z:i},'rgba(70,85,105,.22)',1,1);
+      line3D({x:0,y:i,z:0},{x:1,y:i,z:0},'rgba(70,85,105,.18)',1,1);
+      line3D({x:i,y:0,z:0},{x:i,y:1,z:0},'rgba(70,85,105,.18)',1,1);
+      line3D({x:0,y:0,z:i},{x:0,y:1,z:i},'rgba(70,85,105,.18)',1,1);
+      line3D({x:0,y:i,z:0},{x:0,y:i,z:1},'rgba(70,85,105,.15)',1,1);
+    }
+
+    // bold axes
+    line3D({x:0,y:0,z:0},{x:1.1,y:0,z:0},'rgba(120,138,165,.9)', 1.8, 1);
+    line3D({x:0,y:0,z:0},{x:0,y:1.1,z:0},'rgba(120,138,165,.9)', 1.8, 1);
+    line3D({x:0,y:0,z:0},{x:0,y:0,z:1.1},'rgba(120,138,165,.9)', 1.8, 1);
+  }
+
+  function drawVectorField() {
+    for (let x = .1; x <= .9; x += .2) {
+      for (let y = .1; y <= .9; y += .2) {
+        for (let z = .1; z <= .9; z += .2) {
+          const p = {x,y,z};
+          const f = flow(p);
+          const mag = len(f) * 1.7;
+          if (mag < .018) continue;
+          const end = add(p, mul(norm(f), mag));
+          line3D(p, end, 'rgba(130,148,175,.22)', 1, .82);
+        }
+      }
+    }
+  }
+
+  function drawAttractor() {
+    const s = .13 + SCENARIOS[state.scenario].metrics.grounding * .02;
+    for (let i = 0; i < 80; i++) {
+      const a1 = (i/80) * Math.PI*2;
+      const a2 = ((i+1)/80) * Math.PI*2;
+      const p1 = {x:ATTR_PT.x+Math.cos(a1)*s, y:ATTR_PT.y, z:ATTR_PT.z+Math.sin(a1)*s*.78};
+      const p2 = {x:ATTR_PT.x+Math.cos(a2)*s, y:ATTR_PT.y, z:ATTR_PT.z+Math.sin(a2)*s*.78};
+      line3D(p1, p2, 'rgba(29,245,232,.92)', 1.5, .95);
+    }
+    // second orbit ring (slightly tilted)
+    for (let i = 0; i < 60; i++) {
+      const a1 = (i/60) * Math.PI*2;
+      const a2 = ((i+1)/60) * Math.PI*2;
+      const rs = s * .7;
+      const p1 = {x:ATTR_PT.x+Math.cos(a1)*rs*.9, y:ATTR_PT.y+Math.sin(a1)*rs*.35, z:ATTR_PT.z+Math.sin(a1)*rs};
+      const p2 = {x:ATTR_PT.x+Math.cos(a2)*rs*.9, y:ATTR_PT.y+Math.sin(a2)*rs*.35, z:ATTR_PT.z+Math.sin(a2)*rs};
+      line3D(p1, p2, 'rgba(29,245,232,.38)', 1, .6);
+    }
+    sphere3D(ATTR_PT, .014, '#ffffff', true);
+  }
+
+  function drawTurbulenceZone() {
+    const turb = turbulenceCenter();
+    for (let i = 0; i < 42; i++) {
+      const ring = .07 + (i % 7) * .009;
+      const a1 = (i/42)*Math.PI*2 + state.time*.0022;
+      const a2 = ((i+1)/42)*Math.PI*2 + state.time*.0022;
+      const p1 = {x:turb.x+Math.cos(a1)*ring, y:turb.y+Math.sin(a1*1.6)*.022, z:turb.z+Math.sin(a1)*ring*.9};
+      const p2 = {x:turb.x+Math.cos(a2)*ring, y:turb.y+Math.sin(a2*1.6)*.022, z:turb.z+Math.sin(a2)*ring*.9};
+      line3D(p1, p2, 'rgba(245,182,29,.3)', 1, .8, i%2===0);
+    }
+  }
+
+  function drawTrajectories() {
+    const turb = turbulenceCenter();
+    const s = SCENARIOS[state.scenario];
+    trajectories.forEach(({pts, recovery}, pathIndex) => {
+      for (let i = 0; i < pts.length-1; i++) {
+        let a = pts[i], b = pts[i+1];
+        let color, alpha = recovery ? .82 : .90, width = recovery ? 1.4 : 1.55;
+
+        if (recovery) {
+          const blend = smoothstep(0, pts.length-1, i);
+          color = lerpColor(0x0d7e78, 0x67f5ec, blend);
+        } else {
+          const intensity = clamp(1 - dist(a, turb)/.55, 0, 1);
+          color = lerpColor(0x1df5e8, 0xf5b61d, intensity);
+          const shake = intensity * (.01 + s.metrics.turbulence*.006);
+          const w1 = Math.sin((i+pathIndex*3+state.time*.05)*.42)*shake;
+          const w2 = Math.cos((i+pathIndex*4+state.time*.04)*.31)*shake;
+          a = {x:a.x+w1, y:a.y+w2, z:a.z-w1};
+          b = {x:b.x+w1, y:b.y+w2, z:b.z-w1};
+        }
+        line3D(a, b, color, width, alpha);
+      }
+    });
+  }
+
+  /* ─── FLOATING 3D LABELS ────────────────────────────────── */
+  function posLabel(el, p, ox=0, oy=0) {
+    const q = project(p);
+    el.style.left = `${q.x+ox}px`;
+    el.style.top  = `${q.y+oy}px`;
+    el.style.opacity = q.visible ? '1' : '0';
+  }
+
+  function updateLabels() {
+    posLabel(els.lAttractor,  ATTR_PT, 0, -30);
+    posLabel(els.lTurbulence, turbulenceCenter(), 0, 8);
+    posLabel(els.lX, {x:.55,y:0,z:0},  0, 20);
+    posLabel(els.lY, {x:0,y:.55,z:0}, -56, 0);
+    posLabel(els.lZ, {x:0,y:0,z:.55},  28, 20);
+  }
+
+  /* ─── METRIC ANIMATION ──────────────────────────────────── */
+  let metricCurrent = { attention:.63, memory:.42, grounding:.70, turbulence:.28 };
+
+  function updateMetrics() {
+    const base = SCENARIOS[state.scenario].metrics;
+    const tau  = state.tau;
+    const target = {
+      attention:  clamp(base.attention  - Math.abs(tau)*.12, 0, 1),
+      memory:     clamp(base.memory     + Math.abs(tau)*.08, 0, 1),
+      grounding:  clamp(base.grounding  - Math.abs(tau)*.09, 0, 1),
+      turbulence: clamp(base.turbulence + Math.abs(tau)*.09, 0, 1)
+    };
+
+    // smooth lerp
+    Object.keys(target).forEach(k => {
+      metricCurrent[k] = lerp(metricCurrent[k], target[k], .08);
+    });
+
+    const m = metricCurrent;
+    const fmt = v => v.toFixed(2);
+
+    els.vAttention.textContent  = fmt(m.attention);
+    els.vMemory.textContent     = fmt(m.memory);
+    els.vGrounding.textContent  = fmt(m.grounding);
+    els.vTurbulence.textContent = fmt(m.turbulence);
+
+    els.bAttention.style.width  = `${m.attention  * 100}%`;
+    els.bMemory.style.width     = `${m.memory     * 100}%`;
+    els.bGrounding.style.width  = `${m.grounding  * 100}%`;
+    els.bTurbulence.style.width = `${m.turbulence * 100}%`;
+
+    // color feedback on danger
+    els.vMemory.classList.toggle('danger', m.memory > .7);
+    els.vTurbulence.classList.toggle('danger', m.turbulence > .6);
+
+    // τ pill
+    const tauVal = state.tau;
+    const tauLabel = tauVal < -.2 ? 'past-biased' : tauVal > .2 ? 'future-biased' : 'present';
+    els.tauPill.textContent = `${tauVal.toFixed(2)} ${tauLabel}`;
+  }
+
+  /* ─── SCENARIO ACTIVATION ───────────────────────────────── */
+  function activateScenario(key) {
+    state.scenario = key;
+    const s = SCENARIOS[key];
+
+    // button states
+    ['btnBaseline','btnOverload','btnRitual'].forEach(id => $( id).classList.remove('active'));
+    const btnMap = { baseline:'btnBaseline', overload:'btnOverload', ritual:'btnRitual' };
+    $(btnMap[key]).classList.add('active');
+
+    // callout
+    els.sceneCopy.textContent = s.copy;
+    els.sceneCallout.className = 'scene-callout ' + s.calloutClass;
+
+    // rebuild trajectories
+    trajectories = buildTrajectories();
+    metricCurrent = { ...s.metrics }; // snap metrics on scenario change
+    updateMetrics();
+  }
+
+  /* ─── DEMO STEP MANAGER ─────────────────────────────────── */
+  function goToStep(n) {
+    state.demoStep = clamp(n, 0, STEPS.length-1);
+    const step = STEPS[state.demoStep];
+    els.scriptText.textContent = step.text;
+    els.stepLabel.textContent  = step.label;
+
+    els.stepDots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === state.demoStep);
+      dot.classList.toggle('done', i < state.demoStep);
+    });
+  }
+
+  /* ─── RESIZE ────────────────────────────────────────────── */
+  function resize() {
+    state.w = app.clientWidth;
+    state.h = Math.max(window.innerHeight, app.clientHeight);
+    canvas.width  = state.w * state.dpr;
+    canvas.height = state.h * state.dpr;
+    canvas.style.width  = state.w + 'px';
+    canvas.style.height = state.h + 'px';
+    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+  }
+
+  /* ─── DRAW ──────────────────────────────────────────────── */
+  function draw() {
+    drawBackdrop();
+    drawBox();
+    drawVectorField();
+    drawTurbulenceZone();
+    drawTrajectories();
+    drawAttractor();
+    updateLabels();
+  }
+
+  /* ─── MAIN LOOP ─────────────────────────────────────────── */
+  function tick() {
+    if (state.running) state.time++;
+    updateMetrics();
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  /* ─── POINTER ───────────────────────────────────────────── */
+  canvas.addEventListener('mousedown', e => { state.dragging=true; state.lastX=e.clientX; state.lastY=e.clientY; });
+  window.addEventListener('mousemove', e => {
+    if (!state.dragging) return;
+    state.yaw   += (e.clientX-state.lastX)*.008;
+    state.pitch  = clamp(state.pitch + (e.clientY-state.lastY)*.006, -1.15, 1.15);
+    state.lastX = e.clientX; state.lastY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => state.dragging=false);
+
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length===1) { state.dragging=true; state.lastX=e.touches[0].clientX; state.lastY=e.touches[0].clientY; }
+  }, {passive:true});
+  canvas.addEventListener('touchmove', e => {
+    if (!state.dragging || e.touches.length!==1) return;
+    state.yaw   += (e.touches[0].clientX-state.lastX)*.008;
+    state.pitch  = clamp(state.pitch + (e.touches[0].clientY-state.lastY)*.006, -1.15, 1.15);
+    state.lastX=e.touches[0].clientX; state.lastY=e.touches[0].clientY;
+  }, {passive:true});
+  canvas.addEventListener('touchend', () => state.dragging=false, {passive:true});
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.zoom = clamp(state.zoom + e.deltaY*.0015, .62, 2.7);
+  }, {passive:false});
+
+  let lastClick = 0;
+  canvas.addEventListener('click', () => {
+    const now = Date.now();
+    if (now-lastClick < 280) { state.yaw=-0.78; state.pitch=0.48; state.zoom=1.18; }
+    lastClick = now;
+  });
+
+  /* ─── KEYBOARD ──────────────────────────────────────────── */
+  window.addEventListener('keydown', e => {
+    switch (e.key) {
+      case '1': activateScenario('baseline'); break;
+      case '2': activateScenario('overload'); break;
+      case '3': activateScenario('ritual');   break;
+      case ' ':
+        e.preventDefault();
+        state.running = !state.running;
+        els.btnPlayPause.textContent = state.running ? 'Pause ' : 'Resume ';
+        els.btnPlayPause.innerHTML  += '<span class="kbd">Space</span>';
+        els.btnPlayPause.classList.toggle('active-pause', !state.running);
+        break;
+      case 'p': case 'P':
+        state.presenterMode = !state.presenterMode;
+        document.body.classList.toggle('presenter', state.presenterMode);
+        els.presenterToggle.textContent = state.presenterMode ? 'Exit Demo  ' : 'Demo Mode  ';
+        els.presenterToggle.innerHTML  += '<span class="kbd">P</span>';
+        break;
+      case 'ArrowRight': goToStep(state.demoStep+1); break;
+      case 'ArrowLeft':  goToStep(state.demoStep-1); break;
+    }
+  });
+
+  /* ─── UI EVENTS ─────────────────────────────────────────── */
+  els.btnBaseline.addEventListener('click', () => activateScenario('baseline'));
+  els.btnOverload.addEventListener('click', () => activateScenario('overload'));
+  els.btnRitual.addEventListener('click',   () => activateScenario('ritual'));
+
+  els.tauRange.addEventListener('input', e => {
+    state.tau = Number(e.target.value);
+    trajectories = buildTrajectories();
+  });
+
+  els.btnPlayPause.addEventListener('click', () => {
+    state.running = !state.running;
+    els.btnPlayPause.textContent = state.running ? 'Pause ' : 'Resume ';
+    els.btnPlayPause.innerHTML  += '<span class="kbd">Space</span>';
+    els.btnPlayPause.classList.toggle('active-pause', !state.running);
+  });
+
+  els.btnCamera.addEventListener('click', () => { state.yaw=-0.78; state.pitch=0.48; state.zoom=1.18; });
+
+  els.presenterToggle.addEventListener('click', () => {
+    state.presenterMode = !state.presenterMode;
+    document.body.classList.toggle('presenter', state.presenterMode);
+    els.presenterToggle.textContent = state.presenterMode ? 'Exit Demo  ' : 'Demo Mode  ';
+    els.presenterToggle.innerHTML  += '<span class="kbd">P</span>';
+  });
+
+  els.stepDots.forEach((dot, i) => {
+    dot.addEventListener('click', () => goToStep(i));
+  });
+
+  /* ─── INIT ──────────────────────────────────────────────── */
+  resize();
+  window.addEventListener('resize', resize);
+  goToStep(0);
+  trajectories = buildTrajectories();
+  activateScenario('baseline');
+  tick();
+})();
+</script>
+</body>
+</html>
