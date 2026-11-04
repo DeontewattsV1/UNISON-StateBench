@@ -1,0 +1,41 @@
+name: Celestial CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    name: Smoke Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: pip install -r requirements.txt || true
+      - name: Run smoke tests
+        run: |
+          python -m pytest _smoke_test.py -v --tb=short ||           python _smoke_test.py
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install security tooling
+        run: pip install bandit pip-audit
+      - name: Bandit static analysis
+        run: bandit -r . --skip B101,B110,B311,B404 -ll || true
+      - name: Dependency audit
+        run: pip-audit --desc || true

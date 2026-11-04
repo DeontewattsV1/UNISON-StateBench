@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recognitive Field — Interactive v3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#05070a; --surface:#0b0e14;
+      --card:rgba(11,14,20,.92); --card-lit:rgba(16,20,28,.96);
+      --border:rgba(255,255,255,.08); --border-hi:rgba(255,255,255,.15);
+      --ghost:rgba(255,255,255,.04); --ghost2:rgba(255,255,255,.07);
+      --text:#dde4ee; --dim:#7a8699; --faint:#2e3a4a;
+      --cyan:#1df5e8; --cyan-d:#0d7e78;
+      --amber:#f5b61d; --amber-d:#7a5b0e;
+      --green:#1df55e; --red:#f5411d;
+      --violet:#a855f7; --violet-d:#6b21a8;
+      --r:14px; --r-sm:10px; --r-xs:7px;
+      --shadow:0 24px 80px rgba(0,0,0,.65);
+      --t:.16s cubic-bezier(.4,0,.2,1);
+      --t-med:.28s cubic-bezier(.4,0,.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--ink);color:var(--text);
+      font-family:'Instrument Sans',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+    button,input,select{font:inherit}
+    #app{position:relative;width:100vw;height:100vh;overflow:hidden}
+    canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+    canvas.dragging{cursor:grabbing}
+    .noise{position:absolute;inset:0;pointer-events:none;opacity:.055;
+      background-image:repeating-conic-gradient(rgba(255,255,255,.03) 0% 25%,transparent 0% 50%),
+        radial-gradient(ellipse 80% 60% at 50% 0%,rgba(29,245,232,.04) 0%,transparent 55%);
+      background-size:3px 3px,100% 100%}
+    .vignette{position:absolute;inset:0;pointer-events:none;
+      background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 30%,rgba(0,0,0,.65) 100%)}
+    .scanlines{position:absolute;inset:0;pointer-events:none;opacity:.022;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.4) 2px,rgba(0,0,0,.4) 4px)}
+
+    /* ── panels ── */
+    .panel{position:absolute;background:var(--card);border:1px solid var(--border);
+      backdrop-filter:blur(20px) saturate(1.4);box-shadow:var(--shadow);border-radius:var(--r);
+      animation:fadeUp .55s cubic-bezier(.4,0,.2,1) both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .p-hero  {top:20px;left:20px;width:min(370px,calc(100vw - 40px));padding:20px;animation-delay:.05s}
+    .p-ctrl  {top:20px;right:20px;width:min(340px,calc(100vw - 40px));padding:0;animation-delay:.10s}
+    .p-probe {bottom:20px;right:20px;width:min(340px,calc(100vw - 40px));padding:16px;animation-delay:.18s}
+    .p-info  {bottom:20px;left:20px;width:min(480px,calc(100vw - 40px));padding:16px;animation-delay:.25s}
+
+    /* ── type ── */
+    .mono{font-family:'JetBrains Mono',monospace}
+    .serif{font-family:'DM Serif Display',serif}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
+      font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--cyan);opacity:.82;margin-bottom:10px}
+    .dot-live{width:7px;height:7px;border-radius:50%;background:var(--cyan);
+      box-shadow:0 0 12px var(--cyan);animation:pulse 2.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 12px var(--cyan)}50%{opacity:.4;box-shadow:0 0 4px var(--cyan)}}
+    h1{font-family:'DM Serif Display',serif;font-size:clamp(24px,3.2vw,34px);
+      line-height:1.02;letter-spacing:-.02em;color:#edf2f8;margin-bottom:10px}
+    h1 em{font-style:italic;color:var(--cyan)}
+    .lede{font-size:13px;line-height:1.58;color:#96a3b8;margin-bottom:14px}
+    .lbl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--dim)}
+    .hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:#3a4a5a;line-height:1.55}
+    kbd{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:19px;
+      padding:0 5px;border-radius:5px;background:rgba(255,255,255,.06);
+      border:1px solid var(--border-hi);font-family:'JetBrains Mono',monospace;font-size:9px;color:#7a8fa8}
+
+    /* ── tabs ── */
+    .tab-bar{display:flex;border-bottom:1px solid var(--border);padding:0 14px}
+    .tab{flex:1;padding:11px 4px;font-size:11.5px;font-weight:500;color:var(--dim);
+      border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;
+      margin-bottom:-1px;letter-spacing:.01em;transition:color var(--t),border-color var(--t)}
+    .tab:hover{color:var(--text)}
+    .tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+    .tab-body{padding:14px;display:none}
+    .tab-body.active{display:block}
+
+    /* ── scenario btns ── */
+    .scene-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+    .sbtn{appearance:none;border:1px solid var(--border);background:var(--ghost);color:var(--dim);
+      padding:9px 6px;border-radius:var(--r-sm);cursor:pointer;font-size:11.5px;font-weight:500;
+      transition:all var(--t);position:relative;overflow:hidden}
+    .sbtn:hover{border-color:var(--border-hi);color:var(--text);transform:translateY(-1px)}
+    .sbtn.active{background:rgba(29,245,232,.09);border-color:rgba(29,245,232,.32);color:var(--cyan);
+      box-shadow:0 0 16px rgba(29,245,232,.05) inset}
+    .sbtn .sk{display:block;font-family:'JetBrains Mono',monospace;font-size:9px;opacity:.45;margin-top:3px}
+
+    /* ── sliders ── */
+    .slider-row{margin-bottom:12px}
+    .slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+    .slider-name{font-size:12.5px;color:#b0bece}
+    .slider-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;
+      color:var(--cyan);min-width:32px;text-align:right;transition:color var(--t-med)}
+    .slider-val.hi{color:var(--amber)}
+    .slider-val.crit{color:var(--red)}
+    input[type=range]{width:100%;height:4px;appearance:none;border-radius:999px;outline:none;cursor:pointer}
+    input[type=range].cyan-track{background:linear-gradient(90deg,var(--cyan-d),rgba(255,255,255,.1))}
+    input[type=range].amber-track{background:linear-gradient(90deg,var(--amber-d),rgba(255,255,255,.1))}
+    input[type=range].tau-track{background:linear-gradient(90deg,var(--amber-d),rgba(255,255,255,.1) 50%,var(--cyan-d))}
+    input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;
+      background:var(--cyan);box-shadow:0 0 12px rgba(29,245,232,.55);border:2px solid rgba(0,0,0,.4);
+      transition:transform var(--t),box-shadow var(--t)}
+    input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25);box-shadow:0 0 20px rgba(29,245,232,.9)}
+    input[type=range].amber-track::-webkit-slider-thumb{background:var(--amber);box-shadow:0 0 12px rgba(245,182,29,.55)}
+    .range-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;
+      font-size:9px;color:var(--faint);margin-top:5px}
+
+    /* ── meters ── */
+    .meters{display:grid;gap:8px}
+    .meter .mrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+    .meter .mname{font-size:11.5px;color:#9aaabb}
+    .meter .mval{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;
+      color:var(--cyan);transition:color var(--t-med)}
+    .meter .mval.hi{color:var(--amber)}
+    .meter .mval.crit{color:var(--red)}
+    .track{height:5px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+    .fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1),background-color .5s}
+    .fill.c{background:linear-gradient(90deg,var(--cyan-d),var(--cyan))}
+    .fill.a{background:linear-gradient(90deg,var(--amber-d),var(--amber))}
+    .fill.r{background:linear-gradient(90deg,var(--amber-d),var(--red))}
+
+    /* ── callout ── */
+    .callout{padding:10px 12px;border-radius:var(--r-sm);border-left:2px solid var(--cyan);
+      background:rgba(29,245,232,.04);transition:border-color var(--t-med),background var(--t-med);margin-top:12px}
+    .callout.ov{border-left-color:var(--amber);background:rgba(245,182,29,.04)}
+    .callout.ri{border-left-color:var(--green);background:rgba(29,245,94,.04)}
+    .callout p{font-size:12px;line-height:1.55;color:#9eb0c4}
+
+    /* ── action row ── */
+    .arow{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;align-items:center}
+    .abtn{appearance:none;border:1px solid var(--border);background:var(--ghost);color:var(--dim);
+      padding:7px 13px;border-radius:999px;cursor:pointer;font-size:11px;font-weight:500;
+      letter-spacing:.02em;transition:all var(--t)}
+    .abtn:hover{color:var(--text);border-color:var(--border-hi);background:var(--ghost2)}
+    .abtn.pause{color:var(--amber);border-color:rgba(245,182,29,.28)}
+    .abtn.danger{color:var(--red);border-color:rgba(245,65,29,.3);background:rgba(245,65,29,.06)}
+    .abtn.danger:hover{background:rgba(245,65,29,.12)}
+    .abtn.chaos{animation:chaosFlash .18s ease-in-out}
+    @keyframes chaosFlash{0%,100%{transform:none}50%{transform:scale(1.05)}}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;
+      background:rgba(29,245,94,.06);border:1px solid rgba(29,245,94,.18);font-size:11px;
+      font-weight:500;color:var(--green);font-family:'JetBrains Mono',monospace}
+    .badge .bd{width:6px;height:6px;border-radius:50%;background:var(--green);
+      box-shadow:0 0 10px var(--green);animation:pulse 2s ease-in-out infinite}
+
+    /* ── probe panel ── */
+    .probe-empty{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3a4a5a;
+      text-align:center;padding:8px 0}
+    .probe-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .probe-cell{padding:8px 10px;border-radius:var(--r-xs);background:var(--ghost);border:1px solid var(--border)}
+    .probe-cell .pk{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+    .probe-cell .pv{font-size:12.5px;font-weight:600;color:#c8d8e8}
+    .probe-history{margin-top:10px;display:grid;gap:5px;max-height:90px;overflow-y:auto}
+    .probe-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-xs);
+      background:var(--ghost);border:1px solid var(--border);font-family:'JetBrains Mono',monospace;
+      font-size:10px;color:#7a8fa8;cursor:pointer;transition:border-color var(--t),color var(--t)}
+    .probe-item:hover{border-color:rgba(168,85,247,.3);color:#c4a0f5}
+    .probe-item .pi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .probe-item .pi-fate{font-weight:600}
+    .probe-item.fate-r .pi-fate{color:var(--cyan)}
+    .probe-item.fate-t .pi-fate{color:var(--amber)}
+
+    /* ── info panel ── */
+    .script-text{font-family:'DM Serif Display',serif;font-style:italic;font-size:13px;
+      line-height:1.65;color:#b8c6da;padding-left:12px;border-left:1px solid rgba(29,245,232,.22);margin-bottom:12px}
+    .divider{height:1px;background:var(--border);margin:10px 0}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
+      background:var(--ghost);border:1px solid var(--border);font-size:11px;color:#9ab0c8}
+    .sw{width:8px;height:8px;border-radius:50%}
+
+    /* ── step track ── */
+    .step-track{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+    .sdot{width:8px;height:8px;border-radius:50%;background:var(--faint);
+      border:1px solid var(--border);cursor:pointer;transition:all var(--t-med)}
+    .sdot.done{background:var(--cyan-d);border-color:var(--cyan-d)}
+    .sdot.active{background:var(--cyan);box-shadow:0 0 10px var(--cyan);border-color:var(--cyan)}
+    .slbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--dim)}
+
+    /* ── float labels ── */
+    .fl{position:absolute;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap;
+      font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 8px;border-radius:8px;
+      backdrop-filter:blur(8px);transition:opacity .2s;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+    .fl.attr{color:#a8fbf5;background:rgba(4,12,14,.7);border:1px solid rgba(29,245,232,.22)}
+    .fl.turb{color:#f5e0a0;background:rgba(14,10,4,.7);border:1px solid rgba(245,182,29,.22)}
+    .fl.axis{font-size:10px;color:#6e7e94;background:rgba(6,8,12,.5);border:1px solid rgba(255,255,255,.07)}
+    .fl.probe{color:#e0c8ff;background:rgba(10,6,18,.75);border:1px solid rgba(168,85,247,.3);
+      font-size:10px;pointer-events:none}
+
+    /* ── cursor crosshair overlay ── */
+    #cursorInfo{position:absolute;pointer-events:none;padding:6px 10px;border-radius:var(--r-xs);
+      background:rgba(8,10,14,.82);border:1px solid rgba(255,255,255,.1);
+      font-family:'JetBrains Mono',monospace;font-size:10px;color:#8aaabb;
+      display:none;backdrop-filter:blur(8px);line-height:1.55}
+
+    /* ── presenter mode ── */
+    body.presenter .p-hero,body.presenter .p-info,body.presenter .p-probe{opacity:0;pointer-events:none}
+
+    /* ── screen shake for chaos ── */
+    @keyframes shake{0%,100%{transform:none}20%{transform:translate(-3px,1px)}
+      40%{transform:translate(2px,-2px)}60%{transform:translate(-2px,2px)}80%{transform:translate(1px,-1px)}}
+    .shaking{animation:shake .3s ease-in-out}
+
+    /* ── presenter toggle ── */
+    #pToggle{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:100;
+      appearance:none;border:1px solid var(--border);background:var(--card);color:var(--dim);
+      padding:7px 15px;border-radius:999px;cursor:pointer;font-size:11px;font-weight:500;
+      letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(16px);
+      transition:all var(--t);font-family:'JetBrains Mono',monospace}
+    #pToggle:hover{border-color:var(--border-hi);color:var(--text)}
+    body.presenter #pToggle{color:var(--cyan);border-color:rgba(29,245,232,.3)}
+
+    @media(max-width:900px){html,body{overflow:auto}#app{min-height:1600px;height:auto}
+      .panel{position:relative;left:auto;right:auto;top:auto;bottom:auto;margin:12px;width:calc(100vw - 24px)}
+      canvas{position:fixed;height:100vh}#pToggle{display:none}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div class="noise"></div>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div id="cursorInfo"></div>
+  <button id="pToggle">Demo Mode <kbd>P</kbd></button>
+
+  <!-- HERO -->
+  <section class="panel p-hero">
+    <div class="eyebrow"><span class="dot-live"></span>Recognitive Field · Interactive v3</div>
+    <h1>Cognitive<br><em>State Space</em></h1>
+    <p class="lede">Click anywhere in the cube to inject a probe particle and watch it find its fate. Drag parameters in real time. Inject chaos. Drag the attractor.</p>
+    <div class="hint" style="line-height:1.8">
+      <kbd>click</kbd> inject particle · <kbd>shift+drag</kbd> move attractor<br>
+      <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> scenarios · <kbd>Space</kbd> pause · <kbd>P</kbd> demo · <kbd>←</kbd><kbd>→</kbd> steps
+    </div>
+  </section>
+
+  <!-- MAIN CONTROLS (tabbed) -->
+  <section class="panel p-ctrl">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="scenario">Scenario</button>
+      <button class="tab" data-tab="manual">Manual</button>
+      <button class="tab" data-tab="field">Field</button>
+    </div>
+
+    <!-- SCENARIO TAB -->
+    <div class="tab-body active" id="tab-scenario">
+      <div class="scene-grid">
+        <button class="sbtn active" id="btnB">Baseline<span class="sk">key 1</span></button>
+        <button class="sbtn" id="btnO">Overload<span class="sk">key 2</span></button>
+        <button class="sbtn" id="btnR">Ritual Reset<span class="sk">key 3</span></button>
+      </div>
+
+      <div class="lbl" style="margin-bottom:8px">τ — Temporal Orientation</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;color:#8a98aa">Narrative pull: past ↔ future</div>
+        <span id="tauPill" class="mono" style="font-size:11px;color:var(--cyan)">0.00 present</span>
+      </div>
+      <input type="range" class="tau-track" id="tauR" min="-1" max="1" step=".01" value="0">
+      <div class="range-labels"><span>Past</span><span>Present</span><span>Future</span></div>
+
+      <div class="callout" id="callout" style="margin-top:12px">
+        <p id="calloutTxt">Baseline keeps the field legible. The attractor is visible, turbulence is present but not dominant.</p>
+      </div>
+
+      <div class="lbl" style="margin-top:14px;margin-bottom:8px">Live Readout</div>
+      <div class="meters">
+        <div class="meter"><div class="mrow"><span class="mname">Attention stability</span><span class="mval" id="vA">0.63</span></div><div class="track"><div class="fill c" id="bA" style="width:63%"></div></div></div>
+        <div class="meter"><div class="mrow"><span class="mname">Memory load</span><span class="mval" id="vM">0.42</span></div><div class="track"><div class="fill a" id="bM" style="width:42%"></div></div></div>
+        <div class="meter"><div class="mrow"><span class="mname">Grounding</span><span class="mval" id="vG">0.70</span></div><div class="track"><div class="fill c" id="bG" style="width:70%"></div></div></div>
+        <div class="meter"><div class="mrow"><span class="mname">Turbulence</span><span class="mval" id="vT">0.28</span></div><div class="track"><div class="fill r" id="bT" style="width:28%"></div></div></div>
+      </div>
+
+      <div class="arow">
+        <button class="abtn" id="btnPP">Pause <kbd>Space</kbd></button>
+        <button class="abtn" id="btnCam">Reset cam</button>
+        <button class="abtn danger" id="btnChaos">⚡ Chaos</button>
+        <span class="badge"><span class="bd"></span>LIVE</span>
+      </div>
+    </div>
+
+    <!-- MANUAL TAB -->
+    <div class="tab-body" id="tab-manual">
+      <div style="font-size:12px;color:#7a8fa8;margin-bottom:14px;line-height:1.5">Override field parameters directly. These run on top of the selected scenario.</div>
+
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Attention stability</span><span class="slider-val" id="svA">0.63</span></div>
+        <input type="range" class="cyan-track" id="slA" min="0" max="1" step=".01" value=".63">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Memory load</span><span class="slider-val" id="svM">0.42</span></div>
+        <input type="range" class="amber-track" id="slM" min="0" max="1" step=".01" value=".42">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Grounding</span><span class="slider-val" id="svG">0.70</span></div>
+        <input type="range" class="cyan-track" id="slG" min="0" max="1" step=".01" value=".70">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Turbulence intensity</span><span class="slider-val" id="svT">0.28</span></div>
+        <input type="range" class="amber-track" id="slT" min="0" max="1" step=".01" value=".28">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Attractor pull</span><span class="slider-val" id="svAP">1.00</span></div>
+        <input type="range" class="cyan-track" id="slAP" min="0" max="2" step=".01" value="1">
+      </div>
+
+      <div class="divider"></div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Simulation speed</span><span class="slider-val" id="svSpd">1.0×</span></div>
+        <input type="range" class="cyan-track" id="slSpd" min=".1" max="4" step=".05" value="1">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Path density</span><span class="slider-val" id="svDen">26</span></div>
+        <input type="range" class="cyan-track" id="slDen" min="6" max="60" step="2" value="26">
+      </div>
+
+      <div class="arow">
+        <button class="abtn" id="btnReset">Reset overrides</button>
+        <button class="abtn" id="btnRebuild">Rebuild paths</button>
+      </div>
+    </div>
+
+    <!-- FIELD TAB -->
+    <div class="tab-body" id="tab-field">
+      <div style="font-size:12px;color:#7a8fa8;margin-bottom:14px;line-height:1.5">Tune the geometry and display of the vector field. <strong style="color:#9aaabb">Shift+drag</strong> on the glowing attractor node to reposition it.</div>
+
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Vector field density</span><span class="slider-val" id="svVF">3</span></div>
+        <input type="range" class="cyan-track" id="slVF" min="1" max="6" step="1" value="3">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Trail length</span><span class="slider-val" id="svTL">140</span></div>
+        <input type="range" class="cyan-track" id="slTL" min="30" max="280" step="10" value="140">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Field noise</span><span class="slider-val" id="svNoise">0.45%</span></div>
+        <input type="range" class="amber-track" id="slNoise" min="0" max="2" step=".05" value=".45">
+      </div>
+      <div class="slider-row">
+        <div class="slider-head"><span class="slider-name">Zoom</span><span class="slider-val" id="svZoom">1.18</span></div>
+        <input type="range" class="cyan-track" id="slZoom" min=".4" max="2.8" step=".02" value="1.18">
+      </div>
+
+      <div class="divider"></div>
+      <div class="lbl" style="margin-bottom:8px">Attractor position</div>
+      <div class="probe-grid">
+        <div class="probe-cell"><div class="pk">X (attention)</div><div class="pv" id="atX">0.80</div></div>
+        <div class="probe-cell"><div class="pk">Z (grounding)</div><div class="pv" id="atZ">0.80</div></div>
+      </div>
+      <div class="arow">
+        <button class="abtn" id="btnResetAttr">Reset attractor</button>
+        <button class="abtn" id="btnToggleVF">Hide vectors</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBE PANEL -->
+  <section class="panel p-probe">
+    <div class="lbl" style="margin-bottom:8px">Injected Probes</div>
+    <div id="probeEmpty" class="probe-empty">Click inside the cube to inject a probe particle</div>
+    <div id="probeLive" style="display:none">
+      <div class="probe-grid" id="probeGrid"></div>
+      <div class="lbl" style="margin:10px 0 6px">History</div>
+      <div class="probe-history" id="probeHistory"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="hint">Latest probe: click cube → particle traces fate → result logged here</div>
+  </section>
+
+  <!-- INFO PANEL -->
+  <section class="panel p-info">
+    <div class="step-track">
+      <div class="sdot active" data-s="0"></div>
+      <div class="sdot" data-s="1"></div>
+      <div class="sdot" data-s="2"></div>
+      <div class="sdot" data-s="3"></div>
+      <div class="sdot" data-s="4"></div>
+      <span class="slbl" id="stepLbl">Step 1 — Baseline</span>
+    </div>
+    <p class="script-text" id="scriptTxt">"This cube is the cognitive state space. X is attention coherence, Y is memory load, Z is grounding. Cyan paths show re-regulation. Amber shows destabilization. Click anywhere inside to inject your own probe."</p>
+    <div class="divider"></div>
+    <div class="chips">
+      <div class="chip"><span class="sw" style="background:#1df5e8"></span>Recovery orbit</div>
+      <div class="chip"><span class="sw" style="background:#f5b61d"></span>Turbulence zone</div>
+      <div class="chip"><span class="sw" style="background:#a855f7"></span>Probe particle</div>
+      <div class="chip"><span class="sw" style="background:#1df55e"></span>Attractor</div>
+      <div class="chip"><span class="sw" style="background:#7a8699"></span>Vector field</div>
+    </div>
+  </section>
+
+  <!-- 3D labels -->
+  <div id="lA" class="fl attr">Recovery attractor · Pause → Notice → Return</div>
+  <div id="lT" class="fl turb">Turbulence / overload zone</div>
+  <div id="lX" class="fl axis">attention coherence →</div>
+  <div id="lY" class="fl axis">↑ memory load</div>
+  <div id="lZ" class="fl axis">grounding ↗</div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   SCENARIOS
+══════════════════════════════════════════════════════════ */
+const SCS = {
+  baseline:{key:'baseline',copy:'Baseline keeps the field legible. The attractor is visible, turbulence present but not dominant.',cls:'',
+    m:{a:.63,m:.42,g:.70,t:.28},ts:0,ap:1,dr:0},
+  overload:{key:'overload',copy:'Overload raises memory pressure. More paths spiral into amber turbulence before they can recover.',cls:'ov',
+    m:{a:.34,m:.84,g:.38,t:.82},ts:.15,ap:.68,dr:.08},
+  ritual:{key:'ritual',copy:'Ritual Reset restores grounding so the attractor reasserts pull. The field doesn\'t become perfect — it becomes recoverable.',cls:'ri',
+    m:{a:.79,m:.30,g:.88,t:.18},ts:-.08,ap:1.25,dr:-.03}
+};
+
+const STEPS=[
+  {lbl:'Step 1 — Baseline',txt:'"This cube is the cognitive state space. X is attention coherence, Y is memory load, Z is grounding. Cyan paths show re-regulation. Amber shows destabilization. Click anywhere inside to inject your own probe."'},
+  {lbl:'Step 2 — τ slider',txt:'"Moving τ left pushes the system into rumination — attention fragments, grounding drops. Moving right induces anxious projection. Present-bias is the stable center."'},
+  {lbl:'Step 3 — Overload',txt:'"Under overload, memory pressure climbs past 80%, the attractor weakens, and trajectories spiral into amber turbulence. This is cognitive capture."'},
+  {lbl:'Step 4 — Ritual Reset',txt:'"Ritual Reset does not eliminate turbulence. It restores grounding so the attractor can reassert pull. Paths still start in noise — they just find their way back."'},
+  {lbl:'Step 5 — Key Claim',txt:'"This is a live cognitive field model. Cyan shows recovery. Amber shows overload. The value: drift becomes visible, discussable, and designable — for any system that has a self."'}
+];
+
+/* ══════════════════════════════════════════════════════════
+   DOM
+══════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const app=$('app'), canvas=$('c'), ctx=canvas.getContext('2d');
+const D={
+  tauR:$('tauR'),tauPill:$('tauPill'),
+  btnB:$('btnB'),btnO:$('btnO'),btnR:$('btnR'),
+  btnPP:$('btnPP'),btnCam:$('btnCam'),btnChaos:$('btnChaos'),
+  callout:$('callout'),calloutTxt:$('calloutTxt'),
+  vA:$('vA'),vM:$('vM'),vG:$('vG'),vT:$('vT'),
+  bA:$('bA'),bM:$('bM'),bG:$('bG'),bT:$('bT'),
+  slA:$('slA'),slM:$('slM'),slG:$('slG'),slT:$('slT'),slAP:$('slAP'),
+  slSpd:$('slSpd'),slDen:$('slDen'),
+  slVF:$('slVF'),slTL:$('slTL'),slNoise:$('slNoise'),slZoom:$('slZoom'),
+  svA:$('svA'),svM:$('svM'),svG:$('svG'),svT:$('svT'),svAP:$('svAP'),
+  svSpd:$('svSpd'),svDen:$('svDen'),
+  svVF:$('svVF'),svTL:$('svTL'),svNoise:$('svNoise'),svZoom:$('svZoom'),
+  atX:$('atX'),atZ:$('atZ'),
+  btnReset:$('btnReset'),btnRebuild:$('btnRebuild'),
+  btnResetAttr:$('btnResetAttr'),btnToggleVF:$('btnToggleVF'),
+  probeEmpty:$('probeEmpty'),probeLive:$('probeLive'),
+  probeGrid:$('probeGrid'),probeHistory:$('probeHistory'),
+  scriptTxt:$('scriptTxt'),stepLbl:$('stepLbl'),
+  lA:$('lA'),lT:$('lT'),lX:$('lX'),lY:$('lY'),lZ:$('lZ'),
+  cursorInfo:$('cursorInfo'),
+  pToggle:$('pToggle'),
+  tabs:document.querySelectorAll('.tab'),
+  stepDots:document.querySelectorAll('.sdot')
+};
+
+/* ══════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════ */
+const S={
+  w:0,h:0,dpr:Math.max(1,window.devicePixelRatio||1),
+  yaw:-.78,pitch:.48,zoom:1.18,
+  drag:false,lastX:0,lastY:0,
+  time:0,running:true,
+  tau:0,scenario:'baseline',
+  ptScale:760,center:{x:.5,y:.5,z:.5},
+  presenterMode:false,demoStep:0,
+  // manual overrides (null = use scenario)
+  ov:{a:null,m:null,g:null,t:null,ap:null},
+  speed:1,density:26,trailLen:140,fieldDensity:3,noiseAmt:.0045,
+  showVF:true,
+  // chaos
+  chaosTTL:0,
+  // attractor dragging
+  shiftDrag:false,
+  attrDragStart:null,
+  attrPos:{x:.80,y:.26,z:.80},
+  attrDefault:{x:.80,y:.26,z:.80},
+};
+
+// live metrics (smoothed)
+let MC={a:.63,m:.42,g:.70,t:.28};
+
+/* ══════════════════════════════════════════════════════════
+   PROBE SYSTEM
+══════════════════════════════════════════════════════════ */
+let probes=[]; // active particles
+let probeLog=[]; // history
+
+function injectProbe(p3d){
+  const id=Date.now();
+  const pts=[{...p3d}];
+  let pos={...p3d};
+  // run forward 200 steps to precompute
+  for(let i=0;i<200;i++){
+    let f=flow(pos);
+    f.x+=(Math.random()-.5)*S.noiseAmt;
+    f.y+=(Math.random()-.5)*S.noiseAmt;
+    f.z+=(Math.random()-.5)*S.noiseAmt;
+    pos={x:clamp(pos.x+f.x,0,1),y:clamp(pos.y+f.y,0,1),z:clamp(pos.z+f.z,0,1)};
+    pts.push({...pos});
+  }
+  const tc=turbCenter();
+  const finalDist=dist(pts[pts.length-1],S.attrPos);
+  const fate=finalDist<.28?'recovery':'turbulence';
+  const probe={id,pts,pos:0,fate,alive:true,birth:S.time,color:hsl(fate)};
+  probes.push(probe);
+  logProbe(probe,p3d);
+}
+
+function hsl(fate){return fate==='recovery'?'#c084fc':'#f97316';}
+
+function logProbe(probe,origin){
+  probeLog.unshift({id:probe.id,fate:probe.fate,origin,ts:new Date().toLocaleTimeString()});
+  if(probeLog.length>8)probeLog.pop();
+  renderProbePanel(probe,origin);
+}
+
+function renderProbePanel(latestProbe,origin){
+  D.probeEmpty.style.display='none';
+  D.probeLive.style.display='block';
+  D.probeGrid.innerHTML=`
+    <div class="probe-cell"><div class="pk">Origin X</div><div class="pv">${origin.x.toFixed(3)}</div></div>
+    <div class="probe-cell"><div class="pk">Origin Y</div><div class="pv">${origin.y.toFixed(3)}</div></div>
+    <div class="probe-cell"><div class="pk">Origin Z</div><div class="pv">${origin.z.toFixed(3)}</div></div>
+    <div class="probe-cell"><div class="pk">Fate</div><div class="pv" style="color:${latestProbe.fate==='recovery'?'#a855f7':'#f5b61d'}">${latestProbe.fate}</div></div>
+  `;
+  D.probeHistory.innerHTML=probeLog.map(p=>`
+    <div class="probe-item fate-${p.fate[0]}" title="Click to remove">
+      <span class="pi-dot" style="background:${hsl(p.fate)}"></span>
+      <span class="pi-fate">${p.fate}</span>
+      <span style="color:#4a5a6a;margin-left:auto">${p.ts}</span>
+    </div>
+  `).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   MATH
+══════════════════════════════════════════════════════════ */
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const add=(a,b)=>({x:a.x+b.x,y:a.y+b.y,z:a.z+b.z});
+const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+const mul=(a,s)=>({x:a.x*s,y:a.y*s,z:a.z*s});
+const len=v=>Math.hypot(v.x,v.y,v.z);
+const norm=v=>{const l=len(v)||1;return{x:v.x/l,y:v.y/l,z:v.z/l}};
+const dist=(a,b)=>len(sub(a,b));
+const ss=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t)};
+
+function lerpCol(a,b,t){
+  const ar=(a>>16)&255,ag=(a>>8)&255,ab=a&255;
+  const br=(b>>16)&255,bg=(b>>8)&255,bb=b&255;
+  return`rgb(${~~lerp(ar,br,t)},${~~lerp(ag,bg,t)},${~~lerp(ab,bb,t)})`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROJECTION
+══════════════════════════════════════════════════════════ */
+function rotate(p){
+  let x=p.x-S.center.x,y=p.y-S.center.y,z=p.z-S.center.z;
+  const cy=Math.cos(S.yaw),sy=Math.sin(S.yaw);
+  const x1=cy*x+sy*z,z1=-sy*x+cy*z;
+  const cp=Math.cos(S.pitch),sp=Math.sin(S.pitch);
+  return{x:x1,y:cp*y-sp*z1,z:sp*y+cp*z1};
+}
+function project(p){
+  const r=rotate(p);
+  const d=2.7+r.z*S.zoom;
+  const sc=S.ptScale/d;
+  return{x:S.w/2+r.x*sc,y:S.h/2-r.y*sc,depth:d,visible:d>.25};
+}
+
+// Unproject screen point to 3D (approximate, at z=0.5 plane)
+function unproject(sx,sy){
+  // solve for 3D point on z=0.5 plane that projects to (sx,sy)
+  // iterative approach: scan a grid and find closest screen projection
+  let best=null,bestDist=1e9;
+  for(let x=0;x<=1;x+=.04){
+    for(let y=0;y<=1;y+=.04){
+      for(let z=0;z<=1;z+=.04){
+        const q=project({x,y,z});
+        const d=Math.hypot(q.x-sx,q.y-sy);
+        if(d<bestDist){bestDist=d;best={x,y,z};}
+      }
+    }
+  }
+  if(bestDist>80)return null;
+  return best;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FIELD DYNAMICS
+══════════════════════════════════════════════════════════ */
+function getMetrics(){
+  const sc=SCS[S.scenario];
+  const chaos=S.chaosTTL>0?(S.chaosTTL/60)*.4:0;
+  return{
+    a:S.ov.a!==null?S.ov.a:sc.m.a,
+    m:S.ov.m!==null?S.ov.m:clamp(sc.m.m+chaos,0,1),
+    g:S.ov.g!==null?S.ov.g:sc.m.g,
+    t:S.ov.t!==null?S.ov.t:clamp(sc.m.t+chaos,0,1),
+    ap:S.ov.ap!==null?S.ov.ap:sc.ap,
+    ts:sc.ts,dr:sc.dr
+  };
+}
+
+function turbCenter(){
+  const sc=SCS[S.scenario],tau=S.tau;
+  return{
+    x:clamp(.52+sc.ts+tau*.06,.18,.88),
+    y:clamp(.82+Math.abs(tau)*.06,.2,.94),
+    z:clamp(.30-tau*.08,.12,.88)
+  };
+}
+
+function flow(p){
+  const M=getMetrics();
+  const turb=turbCenter();
+  const tau=S.tau;
+  const dA=dist(p,S.attrPos),dT=dist(p,turb);
+  const pull=M.ap*(.92-Math.abs(tau)*.18+(tau>.0?.06:0));
+  const base={x:.016+tau*.014+M.dr,y:.004+Math.abs(tau)*.01,z:.018-tau*.008};
+  if(dA<.62&&dT>.36){
+    const v=mul(norm(sub(S.attrPos,p)),.046*pull);
+    const orb=mul(norm({x:-(p.z-S.attrPos.z),y:.018+tau*.01,z:(p.x-S.attrPos.x)}),.022+(1-pull)*.005);
+    return add(v,orb);
+  }else if(dT<.54){
+    const sw=norm({x:(p.z-turb.z)*(1.55+Math.abs(tau)*.35),
+      y:(turb.y-p.y)*.62+.08+M.m*.03,
+      z:-(p.x-turb.x)*(1.55+Math.abs(tau)*.35)});
+    let v=mul(sw,.058+M.t*.018);
+    v.x+=tau*.018;v.y+=.005+Math.abs(tau)*.01;
+    return v;
+  }else{
+    return add(base,mul(norm(sub(S.attrPos,p)),.014*pull));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   TRAJECTORY BUILDER
+══════════════════════════════════════════════════════════ */
+let trajectories=[];
+
+function buildTrajectories(){
+  const M=getMetrics(),n=S.density,tl=S.trailLen;
+  const sc=SCS[S.scenario];
+  const rcv=Math.round(n*(.62+(M.a-M.t)*.18));
+  trajectories=[];
+  for(let i=0;i<n;i++){
+    const recovery=i<rcv;
+    let pos={
+      x:clamp(.18+Math.random()*.18+(S.tau>.0?.02:0),.04,.96),
+      y:clamp(.16+Math.random()*.16+Math.abs(S.tau)*.04,.04,.96),
+      z:clamp(.16+Math.random()*.18+(S.tau<0?.03:0),.04,.96)
+    };
+    if(!recovery){pos.x=clamp(pos.x+.06,.04,.96);pos.y=clamp(pos.y+.12,.04,.96);pos.z=clamp(pos.z-.04,.04,.96);}
+    const pts=[];
+    for(let s=0;s<tl;s++){
+      pts.push({...pos});
+      let f=flow(pos);
+      f.x+=(Math.random()-.5)*S.noiseAmt;
+      f.y+=(Math.random()-.5)*S.noiseAmt;
+      f.z+=(Math.random()-.5)*S.noiseAmt;
+      pos={x:clamp(pos.x+f.x,0,1),y:clamp(pos.y+f.y,0,1),z:clamp(pos.z+f.z,0,1)};
+    }
+    trajectories.push({pts,recovery});
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   DRAW HELPERS
+══════════════════════════════════════════════════════════ */
+function line3(a,b,col,w=1,al=1,dash=false){
+  const pa=project(a),pb=project(b);
+  if(!pa.visible&&!pb.visible)return;
+  ctx.save();ctx.globalAlpha=al;ctx.strokeStyle=col;ctx.lineWidth=w;
+  if(dash)ctx.setLineDash([4,6]);
+  ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
+  ctx.restore();
+}
+
+function sphere3(p,r,col,glow=false){
+  const q=project(p);if(!q.visible)return;
+  const rr=Math.max(1,r*(S.ptScale/q.depth));
+  if(glow){
+    const g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,rr*5);
+    g.addColorStop(0,'rgba(29,245,232,.88)');
+    g.addColorStop(.3,'rgba(29,245,232,.22)');
+    g.addColorStop(1,'rgba(29,245,232,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,rr*5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.fillStyle=col;ctx.beginPath();ctx.arc(q.x,q.y,rr,0,Math.PI*2);ctx.fill();
+}
+
+/* ══════════════════════════════════════════════════════════
+   SCENE LAYERS
+══════════════════════════════════════════════════════════ */
+function drawBg(){
+  const bg=ctx.createRadialGradient(S.w*.5,S.h*.35,0,S.w*.5,S.h*.5,S.w*.8);
+  bg.addColorStop(0,'#0c1120');bg.addColorStop(.5,'#080910');bg.addColorStop(1,'#030406');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,S.w,S.h);
+  for(let i=0;i<90;i++){
+    ctx.fillStyle=`rgba(255,255,255,${.015+(i%6)*.007})`;
+    ctx.beginPath();ctx.arc((i*137.5)%S.w,(i*79.3)%S.h,(i%4)*.35+.25,0,Math.PI*2);ctx.fill();
+  }
+  // chaos flash overlay
+  if(S.chaosTTL>0){
+    const intensity=S.chaosTTL/60;
+    ctx.fillStyle=`rgba(245,65,29,${intensity*.08})`;
+    ctx.fillRect(0,0,S.w,S.h);
+    S.chaosTTL=Math.max(0,S.chaosTTL-S.speed);
+  }
+}
+
+function drawBox(){
+  const cr=[{x:0,y:0,z:0},{x:1,y:0,z:0},{x:1,y:0,z:1},{x:0,y:0,z:1},
+    {x:0,y:1,z:0},{x:1,y:1,z:0},{x:1,y:1,z:1},{x:0,y:1,z:1}];
+  [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]
+    .forEach(([a,b])=>line3(cr[a],cr[b],'rgba(100,120,148,.55)',1.3,.88));
+  for(let i=.2;i<1;i+=.2){
+    line3({x:i,y:0,z:0},{x:i,y:0,z:1},'rgba(60,80,100,.2)',1,1);
+    line3({x:0,y:0,z:i},{x:1,y:0,z:i},'rgba(60,80,100,.2)',1,1);
+    line3({x:0,y:i,z:0},{x:1,y:i,z:0},'rgba(60,80,100,.16)',1,1);
+    line3({x:i,y:0,z:0},{x:i,y:1,z:0},'rgba(60,80,100,.16)',1,1);
+    line3({x:0,y:0,z:i},{x:0,y:1,z:i},'rgba(60,80,100,.16)',1,1);
+    line3({x:0,y:i,z:0},{x:0,y:i,z:1},'rgba(60,80,100,.14)',1,1);
+  }
+  line3({x:0,y:0,z:0},{x:1.1,y:0,z:0},'rgba(120,138,165,.9)',1.8,1);
+  line3({x:0,y:0,z:0},{x:0,y:1.1,z:0},'rgba(120,138,165,.9)',1.8,1);
+  line3({x:0,y:0,z:0},{x:0,y:0,z:1.1},'rgba(120,138,165,.9)',1.8,1);
+}
+
+function drawVF(){
+  if(!S.showVF)return;
+  const step=.1*S.fieldDensity*.5;
+  for(let x=step*.5;x<=1;x+=step){
+    for(let y=step*.5;y<=1;y+=step){
+      for(let z=step*.5;z<=1;z+=step){
+        const p={x,y,z},f=flow(p),mag=len(f)*1.7;
+        if(mag<.018)continue;
+        const e=add(p,mul(norm(f),mag));
+        line3(p,e,'rgba(120,140,170,.2)',1,.75);
+      }
+    }
+  }
+}
+
+function drawAttractor(){
+  const a=S.attrPos;
+  const M=getMetrics();
+  const sz=.13+M.g*.02;
+  for(let i=0;i<80;i++){
+    const a1=(i/80)*Math.PI*2,a2=((i+1)/80)*Math.PI*2;
+    line3({x:a.x+Math.cos(a1)*sz,y:a.y,z:a.z+Math.sin(a1)*sz*.78},
+          {x:a.x+Math.cos(a2)*sz,y:a.y,z:a.z+Math.sin(a2)*sz*.78},'rgba(29,245,232,.9)',1.5,.95);
+  }
+  for(let i=0;i<60;i++){
+    const a1=(i/60)*Math.PI*2,a2=((i+1)/60)*Math.PI*2;
+    const rs=sz*.7;
+    line3({x:a.x+Math.cos(a1)*rs*.9,y:a.y+Math.sin(a1)*rs*.35,z:a.z+Math.sin(a1)*rs},
+          {x:a.x+Math.cos(a2)*rs*.9,y:a.y+Math.sin(a2)*rs*.35,z:a.z+Math.sin(a2)*rs},
+          'rgba(29,245,232,.35)',1,.6);
+  }
+  sphere3(a,.014,'#ffffff',true);
+}
+
+function drawTurb(){
+  const tc=turbCenter();
+  const t=S.time;
+  for(let i=0;i<44;i++){
+    const ring=.07+(i%7)*.009;
+    const a1=(i/44)*Math.PI*2+t*.0022,a2=((i+1)/44)*Math.PI*2+t*.0022;
+    line3({x:tc.x+Math.cos(a1)*ring,y:tc.y+Math.sin(a1*1.6)*.022,z:tc.z+Math.sin(a1)*ring*.9},
+          {x:tc.x+Math.cos(a2)*ring,y:tc.y+Math.sin(a2*1.6)*.022,z:tc.z+Math.sin(a2)*ring*.9},
+          'rgba(245,182,29,.28)',1,.8,i%2===0);
+  }
+}
+
+function drawTrajectories(){
+  const turb=turbCenter(),M=getMetrics();
+  trajectories.forEach(({pts,recovery},pi)=>{
+    for(let i=0;i<pts.length-1;i++){
+      let a=pts[i],b=pts[i+1];
+      let col,al=recovery?.82:.9,w=recovery?1.4:1.55;
+      if(recovery){
+        col=lerpCol(0x0d7e78,0x67f5ec,ss(0,pts.length-1,i));
+      }else{
+        const intensity=clamp(1-dist(a,turb)/.55,0,1);
+        col=lerpCol(0x1df5e8,0xf5b61d,intensity);
+        const sh=intensity*(.01+M.t*.006);
+        const w1=Math.sin((i+pi*3+S.time*.05)*.42)*sh;
+        const w2=Math.cos((i+pi*4+S.time*.04)*.31)*sh;
+        a={x:a.x+w1,y:a.y+w2,z:a.z-w1};b={x:b.x+w1,y:b.y+w2,z:b.z-w1};
+      }
+      line3(a,b,col,w,al);
+    }
+  });
+}
+
+function drawProbes(){
+  probes=probes.filter(p=>p.alive);
+  probes.forEach(probe=>{
+    const age=S.time-probe.birth;
+    const head=Math.min(Math.floor(age*S.speed),probe.pts.length-1);
+    if(head<=0)return;
+    // draw trail
+    for(let i=Math.max(0,head-60);i<head-1;i++){
+      const a=probe.pts[i],b=probe.pts[i+1];
+      const t=(i-(head-60))/60;
+      ctx.save();
+      ctx.globalAlpha=t*.7;
+      ctx.strokeStyle=probe.color;
+      ctx.lineWidth=2.5;
+      ctx.beginPath();
+      const pa=project(a),pb=project(b);
+      ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);
+      ctx.stroke();ctx.restore();
+    }
+    // glowing head
+    const hp=probe.pts[head];
+    sphere3(hp,.012,probe.color,false);
+    const q=project(hp);
+    if(q.visible){
+      const g=ctx.createRadialGradient(q.x,q.y,0,q.x,q.y,20);
+      g.addColorStop(0,probe.fate==='recovery'?'rgba(168,85,247,.7)':'rgba(249,115,22,.7)');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(q.x,q.y,20,0,Math.PI*2);ctx.fill();
+    }
+    if(head>=probe.pts.length-1)probe.alive=false;
+  });
+}
+
+function drawHoverProbe(mx,my){
+  // draw crosshair on canvas
+  ctx.save();
+  ctx.strokeStyle='rgba(168,85,247,.4)';
+  ctx.lineWidth=1;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,S.h);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,my);ctx.lineTo(S.w,my);ctx.stroke();
+  ctx.restore();
+}
+
+/* ══════════════════════════════════════════════════════════
+   LABELS
+══════════════════════════════════════════════════════════ */
+function posLabel(el,p,ox=0,oy=0){
+  const q=project(p);
+  el.style.left=`${q.x+ox}px`;el.style.top=`${q.y+oy}px`;
+  el.style.opacity=q.visible?'1':'0';
+}
+
+function updateLabels(){
+  posLabel(D.lA,S.attrPos,0,-30);
+  posLabel(D.lT,turbCenter(),0,8);
+  posLabel(D.lX,{x:.55,y:0,z:0},0,22);
+  posLabel(D.lY,{x:0,y:.55,z:0},-60,0);
+  posLabel(D.lZ,{x:0,y:0,z:.55},28,20);
+  D.atX.textContent=S.attrPos.x.toFixed(3);
+  D.atZ.textContent=S.attrPos.z.toFixed(3);
+}
+
+/* ══════════════════════════════════════════════════════════
+   METRICS UPDATE
+══════════════════════════════════════════════════════════ */
+function updateMetrics(){
+  const M=getMetrics(),tau=S.tau;
+  const target={
+    a:clamp(M.a-Math.abs(tau)*.12,0,1),
+    m:clamp(M.m+Math.abs(tau)*.08,0,1),
+    g:clamp(M.g-Math.abs(tau)*.09,0,1),
+    t:clamp(M.t+Math.abs(tau)*.09,0,1)
+  };
+  ['a','m','g','t'].forEach(k=>MC[k]=lerp(MC[k],target[k],.08));
+  const fmt=v=>v.toFixed(2);
+  [[D.vA,D.bA,MC.a],[D.vM,D.bM,MC.m],[D.vG,D.bG,MC.g],[D.vT,D.bT,MC.t]]
+    .forEach(([ve,be,v])=>{
+      ve.textContent=fmt(v);be.style.width=`${v*100}%`;
+      ve.classList.toggle('hi',v>.65&&v<=.85);
+      ve.classList.toggle('crit',v>.85);
+    });
+  // update manual sliders display (only if not actively overriding)
+  if(S.ov.a===null)D.svA.textContent=fmt(MC.a);
+  if(S.ov.m===null)D.svM.textContent=fmt(MC.m);
+  if(S.ov.g===null)D.svG.textContent=fmt(MC.g);
+  if(S.ov.t===null)D.svT.textContent=fmt(MC.t);
+  const tau2=S.tau;
+  const tauLbl=tau2<-.2?'past':tau2>.2?'future':'present';
+  D.tauPill.textContent=`${tau2.toFixed(2)} ${tauLbl}`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SCENARIO
+══════════════════════════════════════════════════════════ */
+function activateScenario(key){
+  S.scenario=key;
+  const sc=SCS[key];
+  [D.btnB,D.btnO,D.btnR].forEach(b=>b.classList.remove('active'));
+  ({baseline:D.btnB,overload:D.btnO,ritual:D.btnR}[key]).classList.add('active');
+  D.calloutTxt.textContent=sc.copy;
+  D.callout.className='callout '+sc.cls;
+  MC={...sc.m};
+  buildTrajectories();
+}
+
+/* ══════════════════════════════════════════════════════════
+   DEMO STEPS
+══════════════════════════════════════════════════════════ */
+function goStep(n){
+  S.demoStep=clamp(n,0,STEPS.length-1);
+  const st=STEPS[S.demoStep];
+  D.scriptTxt.textContent=st.txt;
+  D.stepLbl.textContent=st.lbl;
+  D.stepDots.forEach((d,i)=>{
+    d.classList.toggle('active',i===S.demoStep);
+    d.classList.toggle('done',i<S.demoStep);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════════ */
+D.tabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    D.tabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-body').forEach(b=>b.classList.remove('active'));
+    $(`tab-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   CANVAS MOUSE
+══════════════════════════════════════════════════════════ */
+let mouseX=0,mouseY=0,showCrosshair=false;
+
+canvas.addEventListener('mousedown',e=>{
+  S.drag=true;S.lastX=e.clientX;S.lastY=e.clientY;
+  if(e.shiftKey){
+    S.shiftDrag=true;
+    S.attrDragStart={mx:e.clientX,my:e.clientY,attr:{...S.attrPos}};
+    canvas.classList.add('dragging');
+  }
+});
+
+window.addEventListener('mousemove',e=>{
+  mouseX=e.clientX;mouseY=e.clientY;
+  if(!S.drag)return;
+  if(S.shiftDrag&&S.attrDragStart){
+    // map delta to attractor position delta
+    const dx=(e.clientX-S.attrDragStart.mx)/S.w*.8;
+    const dy=(e.clientY-S.attrDragStart.my)/S.h*.8;
+    S.attrPos.x=clamp(S.attrDragStart.attr.x+dx*.5,.05,.95);
+    S.attrPos.z=clamp(S.attrDragStart.attr.z+dx*.5,.05,.95);
+    S.attrPos.y=clamp(S.attrDragStart.attr.y-dy*.5,.05,.95);
+    buildTrajectories();
+  }else{
+    S.yaw+=(e.clientX-S.lastX)*.008;
+    S.pitch=clamp(S.pitch+(e.clientY-S.lastY)*.006,-1.15,1.15);
+  }
+  S.lastX=e.clientX;S.lastY=e.clientY;
+  D.slZoom.value=S.zoom;D.svZoom.textContent=S.zoom.toFixed(2);
+});
+
+window.addEventListener('mouseup',()=>{S.drag=false;S.shiftDrag=false;S.attrDragStart=null;canvas.classList.remove('dragging')});
+
+canvas.addEventListener('mousemove',e=>{showCrosshair=true;mouseX=e.clientX;mouseY=e.clientY;
+  // field readout at cursor
+  const p3=unproject(e.clientX,e.clientY);
+  if(p3){
+    const f=flow(p3);const mag=len(f);
+    D.cursorInfo.style.display='block';
+    D.cursorInfo.style.left=`${e.clientX+18}px`;
+    D.cursorInfo.style.top=`${e.clientY-36}px`;
+    D.cursorInfo.innerHTML=`x ${p3.x.toFixed(2)} y ${p3.y.toFixed(2)} z ${p3.z.toFixed(2)}<br>|f| ${mag.toFixed(4)} · click to inject`;
+  }
+});
+canvas.addEventListener('mouseleave',()=>{showCrosshair=false;D.cursorInfo.style.display='none'});
+
+// click to inject probe
+let lastClick=0;
+canvas.addEventListener('click',e=>{
+  const now=Date.now();
+  if(now-lastClick<260){S.yaw=-.78;S.pitch=.48;S.zoom=1.18;}
+  else{
+    if(!e.shiftKey){
+      const p3=unproject(e.clientX,e.clientY);
+      if(p3)injectProbe(p3);
+    }
+  }
+  lastClick=now;
+});
+
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  S.zoom=clamp(S.zoom+e.deltaY*.0015,.4,2.8);
+  D.slZoom.value=S.zoom;D.svZoom.textContent=S.zoom.toFixed(2);
+},{passive:false});
+
+canvas.addEventListener('touchstart',e=>{if(e.touches.length===1){S.drag=true;S.lastX=e.touches[0].clientX;S.lastY=e.touches[0].clientY;}},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(!S.drag||e.touches.length!==1)return;
+  S.yaw+=(e.touches[0].clientX-S.lastX)*.008;
+  S.pitch=clamp(S.pitch+(e.touches[0].clientY-S.lastY)*.006,-1.15,1.15);
+  S.lastX=e.touches[0].clientX;S.lastY=e.touches[0].clientY;
+},{passive:true});
+canvas.addEventListener('touchend',()=>S.drag=false,{passive:true});
+
+/* ══════════════════════════════════════════════════════════
+   CONTROLS
+══════════════════════════════════════════════════════════ */
+D.btnB.addEventListener('click',()=>activateScenario('baseline'));
+D.btnO.addEventListener('click',()=>activateScenario('overload'));
+D.btnR.addEventListener('click',()=>activateScenario('ritual'));
+
+D.tauR.addEventListener('input',e=>{S.tau=+e.target.value;buildTrajectories();});
+
+D.btnPP.addEventListener('click',()=>{
+  S.running=!S.running;
+  D.btnPP.innerHTML=(S.running?'Pause ':'Resume ')+'<kbd>Space</kbd>';
+  D.btnPP.classList.toggle('pause',!S.running);
+});
+
+D.btnCam.addEventListener('click',()=>{S.yaw=-.78;S.pitch=.48;S.zoom=1.18;D.slZoom.value=1.18;D.svZoom.textContent='1.18';});
+
+D.btnChaos.addEventListener('click',()=>{
+  S.chaosTTL=60;
+  buildTrajectories();
+  D.btnChaos.classList.add('chaos');
+  app.classList.add('shaking');
+  setTimeout(()=>{D.btnChaos.classList.remove('chaos');app.classList.remove('shaking');},350);
+  setTimeout(()=>buildTrajectories(),1500);
+});
+
+// manual sliders
+function bindManual(slider,ov,labelEl,fmt=(v)=>v.toFixed(2)){
+  slider.addEventListener('input',e=>{
+    const v=+e.target.value;
+    S.ov[ov]=v;
+    labelEl.textContent=fmt(v);
+    buildTrajectories();
+  });
+}
+bindManual(D.slA,'a',D.svA);
+bindManual(D.slM,'m',D.svM);
+bindManual(D.slG,'g',D.svG);
+bindManual(D.slT,'t',D.svT);
+bindManual(D.slAP,'ap',D.svAP);
+
+D.slSpd.addEventListener('input',e=>{S.speed=+e.target.value;D.svSpd.textContent=`${S.speed.toFixed(1)}×`;});
+D.slDen.addEventListener('input',e=>{S.density=~~e.target.value;D.svDen.textContent=S.density;buildTrajectories();});
+
+D.slVF.addEventListener('input',e=>{S.fieldDensity=~~e.target.value;D.svVF.textContent=S.fieldDensity;});
+D.slTL.addEventListener('input',e=>{S.trailLen=~~e.target.value;D.svTL.textContent=S.trailLen;buildTrajectories();});
+D.slNoise.addEventListener('input',e=>{S.noiseAmt=+e.target.value*.01;D.svNoise.textContent=`${(+e.target.value).toFixed(2)}%`;});
+D.slZoom.addEventListener('input',e=>{S.zoom=+e.target.value;D.svZoom.textContent=S.zoom.toFixed(2);});
+
+D.btnReset.addEventListener('click',()=>{
+  S.ov={a:null,m:null,g:null,t:null,ap:null};
+  const sc=SCS[S.scenario];
+  D.slA.value=sc.m.a;D.svA.textContent=sc.m.a.toFixed(2);
+  D.slM.value=sc.m.m;D.svM.textContent=sc.m.m.toFixed(2);
+  D.slG.value=sc.m.g;D.svG.textContent=sc.m.g.toFixed(2);
+  D.slT.value=sc.m.t;D.svT.textContent=sc.m.t.toFixed(2);
+  D.slAP.value=sc.ap;D.svAP.textContent=sc.ap.toFixed(2);
+  buildTrajectories();
+});
+
+D.btnRebuild.addEventListener('click',()=>buildTrajectories());
+
+D.btnResetAttr.addEventListener('click',()=>{
+  S.attrPos={...S.attrDefault};buildTrajectories();
+});
+
+let vfVisible=true;
+D.btnToggleVF.addEventListener('click',()=>{
+  S.showVF=!S.showVF;D.btnToggleVF.textContent=S.showVF?'Hide vectors':'Show vectors';
+});
+
+D.pToggle.addEventListener('click',()=>{
+  S.presenterMode=!S.presenterMode;
+  document.body.classList.toggle('presenter',S.presenterMode);
+  D.pToggle.innerHTML=S.presenterMode?'Exit Demo <kbd>P</kbd>':'Demo Mode <kbd>P</kbd>';
+});
+
+D.stepDots.forEach((d,i)=>d.addEventListener('click',()=>goStep(i)));
+
+/* ══════════════════════════════════════════════════════════
+   KEYBOARD
+══════════════════════════════════════════════════════════ */
+window.addEventListener('keydown',e=>{
+  switch(e.key){
+    case '1':activateScenario('baseline');break;
+    case '2':activateScenario('overload');break;
+    case '3':activateScenario('ritual');break;
+    case ' ':e.preventDefault();D.btnPP.click();break;
+    case 'p':case 'P':D.pToggle.click();break;
+    case 'ArrowRight':goStep(S.demoStep+1);break;
+    case 'ArrowLeft':goStep(S.demoStep-1);break;
+    case 'c':case 'C':injectProbe({x:.5+Math.random()*.2,y:.3+Math.random()*.2,z:.5+Math.random()*.2});break;
+    case 'x':case 'X':D.btnChaos.click();break;
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   RESIZE
+══════════════════════════════════════════════════════════ */
+function resize(){
+  S.w=app.clientWidth;
+  S.h=Math.max(window.innerHeight,app.clientHeight);
+  canvas.width=S.w*S.dpr;canvas.height=S.h*S.dpr;
+  canvas.style.width=S.w+'px';canvas.style.height=S.h+'px';
+  ctx.setTransform(S.dpr,0,0,S.dpr,0,0);
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAIN LOOP
+══════════════════════════════════════════════════════════ */
+function draw(){
+  drawBg();drawBox();drawVF();drawTurb();drawTrajectories();drawProbes();drawAttractor();
+  if(showCrosshair)drawHoverProbe(mouseX,mouseY);
+  updateLabels();
+}
+
+function tick(){
+  if(S.running)S.time+=S.speed;
+  updateMetrics();draw();
+  requestAnimationFrame(tick);
+}
+
+/* ══════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════ */
+resize();
+window.addEventListener('resize',resize);
+goStep(0);
+activateScenario('baseline');
+tick();
+})();
+</script>
+</body>
+</html>

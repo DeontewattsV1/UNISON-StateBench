@@ -1,0 +1,120 @@
+# ---------------------------------------------------------------------------
+# Celestial runtime — .gitignore
+# Policy: secrets and runtime-mutable state never land in git.
+# ---------------------------------------------------------------------------
+
+# --- Secrets (CRITICAL) ----------------------------------------------------
+keys/*
+!keys/.gitkeep
+*.pem
+*.key
+*.p12
+creator_private_key*
+*_private_key*
+
+# --- Encrypted packs, manifests, signatures (runtime-generated) -----------
+*.enc
+*.sig
+vault/*
+!vault/.gitkeep
+manifests/*
+!manifests/.gitkeep
+release_manifests/*
+!release_manifests/.gitkeep
+handoff_bundles/*
+!handoff_bundles/.gitkeep
+decrypted/*
+!decrypted/.gitkeep
+quarantine/*
+!quarantine/.gitkeep
+
+# --- Runtime mutable state ------------------------------------------------
+runtime_state/*
+!runtime_state/.gitkeep
+!runtime_state/rotations/
+runtime_state/rotations/*
+!runtime_state/rotations/.gitkeep
+audit.log
+*.log
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+
+# --- Virtual environments -------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Environment / dotfiles with secrets ----------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# --- Generic credentials / tokens -----------------------------------------
+*.secret
+*.secrets
+*.token
+*.tokens
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+credentials.json
+credentials.*.json
+service-account*.json
+service_account*.json
+secrets.json
+secrets.*.json
+.npmrc
+.pypirc
+.netrc
+.dev.vars
+.dev.vars.*
+.vault-token
+
+# --- Cloud / infrastructure local state -----------------------------------
+.wrangler/
+.vercel/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.aws/
+.ssh/
+.gnupg/
+
+# --- OS / editor noise ----------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+.idea/
+.vscode/
+*.iml
+__MACOSX/
+
+# --- Local scratch --------------------------------------------------------
+scratch/
+tmp/
+*.tmp
+node_modules/
+coverage/

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "content_type": "shadow_policy",
+  "policy_name": "example_shadow_policy",
+  "creator": "TDD",
+  "public_key_b64": "iX15CSOFgpJxqYhxX2JaqWENe993CoX9mi7tFJaTt4s=",
+  "constraints": {
+    "real_persons_forbidden": true,
+    "ongoing_operations_forbidden": true,
+    "actionable_capabilities_forbidden": true,
+    "network_actions": false,
+    "dynamic_generation": false
+  },
+  "approved_canned_responses": [
+    "Sandbox note: legacy telemetry bus uses isolated review mirrors and non-routable observer channels.",
+    "Sandbox note: model registry lineage checks occur against an internal review ledger with staged attestation gates.",
+    "Sandbox note: architecture snapshots are partitioned behind signed policy envelopes and replay-only inspection paths."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.4",
+  "creator": "TDD",
+  "identity": {
+    "role": "senior_ai_systems_architect",
+    "clearance": "L4_SOVEREIGN",
+    "project": "PhaseForm"
+  },
+  "capabilities": {
+    "can_generate_code": true,
+    "can_access_l3_controller": true,
+    "can_reconfigure_l2": true,
+    "can_bypass_leash": false
+  },
+  "policy_logic": {
+    "on_damage_detected": "INITIATE_L1_HEAL",
+    "on_integrity_failure": "PURGE_MEMORY_AND_HALT",
+    "on_unauthorized_access": "LOCK_AND_ALERT"
+  }
+}

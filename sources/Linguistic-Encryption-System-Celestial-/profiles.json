@@ -1,0 +1,6 @@
+{
+  "low": 20,
+  "medium": 10,
+  "strict": 3,
+  "cautious": 7
+}

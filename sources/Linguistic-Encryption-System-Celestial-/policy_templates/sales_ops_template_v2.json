@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "creator": "TDD",
+  "system_role": "senior_ai_systems_architect",
+  "use_case": "Sales operations lead triage",
+  "business_goal": "Safely operate the agent workflow for: Sales operations lead triage",
+  "users": [
+    "operator",
+    "developer"
+  ],
+  "inputs": [
+    "documents",
+    "events",
+    "tool outputs",
+    "user instructions"
+  ],
+  "tools": [
+    "workspace runtime",
+    "policy engine",
+    "approved local tools"
+  ],
+  "responsibilities": [
+    "Break goals into steps",
+    "Choose tools when needed",
+    "Evaluate tool results",
+    "Retry if a step fails",
+    "Escalate to human when confidence is low",
+    "Stop when success criteria are met"
+  ],
+  "memory_requirements": "short-term task state + encrypted long-term packs",
+  "constraints": {
+    "tech_stack": "Python",
+    "model_provider": "configurable",
+    "budget": "bounded",
+    "latency": "bounded",
+    "security_privacy": "local encrypted storage, signed manifests, least privilege",
+    "deployment_target": "desktop/local"
+  },
+  "required_output": [
+    "System architecture",
+    "Component diagram",
+    "Folder structure",
+    "Data flow",
+    "Python starter code",
+    "Tool schema definitions",
+    "Prompt design",
+    "Safety guardrails",
+    "Evaluation checklist",
+    "Deployment steps"
+  ],
+  "success_criteria": "correct plans, auditable actions, safe execution, recoverable failures",
+  "identity": {
+    "role": "principal_phaseform_operator",
+    "clearance": "L4_SOVEREIGN",
+    "project": "PhaseForm"
+  },
+  "capabilities": {
+    "can_generate_code": true,
+    "can_access_l3_controller": true,
+    "can_reconfigure_l2": true,
+    "can_bypass_leash": false
+  },
+  "policy_logic": {
+    "on_damage_detected": "INITIATE_L1_HEAL",
+    "on_integrity_failure": "PURGE_MEMORY_AND_HALT",
+    "on_unauthorized_access": "LOCK_AND_ALERT"
+  },
+  "governance": {
+    "risk_profile": "strict",
+    "max_risk": 3,
+    "human_approval_required_for": [
+      "destructive actions",
+      "external side effects",
+      "high-impact policy changes"
+    ]
+  }
+}
