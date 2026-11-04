@@ -1,0 +1,100 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# --- Security / local secrets ---
+.env
+.env.*
+!.env.example
+!.env.sample
+*.secret
+*.secrets
+*.token
+*.tokens
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+credentials.json
+credentials.*.json
+service-account*.json
+service_account*.json
+secrets.json
+secrets.*.json
+.npmrc
+.pypirc
+.netrc
+.dev.vars
+.dev.vars.*
+.wrangler/
+.vercel/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.aws/
+.ssh/
+.gnupg/
+.vault-token
+*.log
+*.bak
+*.swp
+__MACOSX/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+build/
