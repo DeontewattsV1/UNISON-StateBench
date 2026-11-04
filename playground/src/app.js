@@ -23,7 +23,7 @@ function render({ steps, receipt }, chainOk) {
   $("graph").innerHTML = graph(steps);
   $("steps").innerHTML = steps.map((s) => `<div class="step" data-step="${s.id}"><b>${s.id}</b>
     <span class="badge ${s.kind}">${s.kind === "implemented" ? "Implemented" : "Concept (illustrative)"}</span>
-    <span class="${s.pass ? "pass" : "fail"}">${s.pass ? "pass" : "fail"}</span> — <i>${s.repo}</i>
+    <span class="${s.pass ? "pass" : "fail"}">${s.pass ? "pass" : "fail"}</span>${s.advisory ? " <i>(advisory, does not gate promotion)</i>" : ""} — <i>${s.repo}</i>
     <div>output_hash <code>${s.output_hash}</code></div><div>link_hash <code>${s.link_hash}</code></div>
     <details><summary>output</summary><pre>${JSON.stringify(s.output, null, 2).replace(/</g, "&lt;")}</pre></details></div>`).join("");
   $("receipt").textContent = JSON.stringify(receipt, null, 2);

@@ -89,3 +89,31 @@ test("evidence-record example has every schema-required field", () => {
   for (const k of schema.properties.promotion_receipt.required) assert.ok(k in ex.promotion_receipt, k);
   assert.ok(schema.$defs.status.enum.includes(ex.status));
 });
+test("Recognitive-field probe port: deterministic and scenario-sensitive", () => {
+  const near = S.rfProbe({ x: .78, y: .28, z: .78 }, { noise: 0 });
+  assert.equal(near.fate, "recovery");
+  const a = S.rfProbe({ x: .3, y: .3, z: .3 }, { seed: 5 }), b = S.rfProbe({ x: .3, y: .3, z: .3 }, { seed: 5 });
+  assert.deepEqual(a, b);
+  const t = S.rfTurbCenter("baseline");
+  assert.equal(S.rfProbe(t, { scenario: "overload", noise: 0 }).fate, "turbulence");
+});
+test("celestial desktop codec matches Python CelestialCodec byte-for-byte", async () => {
+  const fx = JSON.parse(fs.readFileSync(new URL("./desktop_fixture.json", import.meta.url)));
+  const c = await S.desktopCodec(fx.seed);
+  assert.equal(c.encode(fx.msg), fx.encoded);
+  assert.equal(c.decode(fx.encoded), fx.msg);
+});
+test("celestial desktop runtime commands and workspace containment", async () => {
+  const r = await S.desktopExecute('MAKE FILE "a.txt"\nAPPEND "hi" TO "a.txt"\nREAD FILE "a.txt"\nHASH "hi"\nLIST FILES', {});
+  assert.match(r.transcript, /\nhi\n/);
+  assert.match(r.transcript, new RegExp(await S.sha256Hex("hi")));
+  await assert.rejects(S.desktopExecute('WRITE "x" TO "../escape.txt"', {}));
+  await assert.rejects(S.desktopExecute('RM -RF', {}));
+  assert.equal(S.resolveSafe("a/../b.txt"), "b.txt");
+});
+test("recognitive-field stage is advisory and never blocks promotion", async () => {
+  const input = structuredClone(SAMPLE); input.recognitive = { scenario: "overload", noise: 0, seed: 1 };
+  const { steps, receipt } = await runPipeline(input);
+  assert.ok(steps.find((s) => s.id === "recognitive-field").advisory);
+  assert.equal(receipt.promoted, true);
+});

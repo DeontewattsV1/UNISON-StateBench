@@ -47,8 +47,13 @@ Classification reflects what is in the repository at the commits in `PROVENANCE.
 | 37 | Deception simulation guardrails | LES `docs/deception_simulation_guardrails.md`, `deception_review_stub.py` | IT | `_smoke_deception_review_stub.py` (stub) |
 | 38 | Security strength of the glyph encoding | LES | H | Glyph substitution is a keyed code, not encryption; confidentiality comes only from the one-time pad. Not evaluated. |
 | 39 | AI Soul Framework concepts | AISoulFrameworkConcepts | H | Concept text and PDF |
-| 40 | Recognition field | Recognitive-field (private) | H | HTML visualisation only |
-| 41 | Celestial desktop agent | celestial_agent_desktop_upgrade (private) | IU | `app.py`, `celestial_core.py`; no tests found; not imported |
+| 40 | Recognition field as a model of cognitive state (attention, memory load, grounding; "drift becomes visible") | Recognitive-field `README.md`, HTML step text | H | Interpretive claim; no data |
+| 40a | Recognition-field dynamics: attractor pull, turbulence swirl, probe fate (recovery if final distance < 0.28) | Recognitive-field `recognitive-field-v3.html` `flow()`, `injectProbe()` | IU | No tests in source. The playground port has deterministic unit tests, but those cover the port, not the original |
+| 40b | Scenario parameters (baseline / overload / ritual reset) | Recognitive-field v3 `SCS` | D | Hand-set constants, not fitted |
+| 41 | Celestial desktop agent GUI | celestial_agent_desktop_upgrade `app.py` | IU | No tests |
+| 41a | Signed + encrypted agent spec pack (Ed25519, scrypt, AES-GCM) | celestial_agent_desktop_upgrade `celestial_core.py` `AgentSpecCrypto` | IU | No tests in source; not ported to the playground |
+| 41b | 2-glyph CelestialCodec and sandboxed workspace command runtime | `celestial_core.py` `CelestialCodec`, `SafeWorkspace`, `AgentRuntime` | IU | No tests in source; the playground port is cross-checked against the Python codec and unit-tested |
+| 41c | PhaseForm runtime package (same orchestrator/schema/manifest code as rows 30–32, plus vault watcher and state viewer) | phaseform_runtime_package_v6 (file copy) | IU | Its `_smoke_test.py` / `_smoke_manifest.py` scripts are present; not run in this review |
 | 42 | Claim-promotion receipt (demo) | `playground/src/pipeline.js` | IT | `playground/tests/` |
 | 43 | Hash-chained trace | `playground/src/pipeline.js` | IT | `playground/tests/` (tamper detection test) |
 | 44 | Evidence-record schema | `schemas/evidence-record.schema.json` | D | |

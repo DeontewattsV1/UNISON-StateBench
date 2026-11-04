@@ -22,6 +22,8 @@ export const SAMPLE = {
     capabilities: { can_generate_code: false }, policy_logic: { tamper_detected: "LOCK_AND_ALERT", ok: "NO_OP" } },
   phaseform_event: "ok",
   seed: "unison-demo-seed",
+  recognitive: { scenario: "baseline", noise: 0.0045, seed: 7 },
+  desktop: { seed: "celestial-desktop-seed" },
 };
 
 export async function runPipeline(input = SAMPLE, opts = {}) {
@@ -58,7 +60,7 @@ export async function runPipeline(input = SAMPLE, opts = {}) {
   let pf;
   try { pf = S.phaseformStep(input.phaseform, input.phaseform_event); pf.ok = true; }
   catch (e) { pf = { ok: false, error: String(e.message) }; }
-  await add("phaseform-step", "phaseform_runtime_package_v6 (public copy in Linguistic-Encryption-System-Celestial-)", "implemented", pf, pf.ok);
+  await add("phaseform-step", "phaseform_runtime_package_v6", "implemented", pf, pf.ok);
 
   const map = await S.glyphMap(input.seed);
   const encoded = S.encodeMessage(map, claim.statement);
@@ -71,9 +73,31 @@ export async function runPipeline(input = SAMPLE, opts = {}) {
   await add("linguistic-transform", "Linguistic-Encryption-System-Celestial-", "implemented",
     { encoded_sha256: await S.sha256Hex(encoded), ciphertext_sha256: await S.sha256Hex(new Uint8Array(ct)), round_trip: roundTrip }, roundTrip);
 
+  // Recognitive-field probe: start point derived from the claim hash. Advisory only:
+  // the field is a visual dynamical model, not evidence, so it never blocks or grants promotion.
+  const ch = steps[0].output_hash;
+  const start = { x: parseInt(ch.slice(0, 2), 16) / 255, y: parseInt(ch.slice(2, 4), 16) / 255, z: parseInt(ch.slice(4, 6), 16) / 255 };
+  const rf = input.recognitive || {};
+  const probe = S.rfProbe(start, { scenario: rf.scenario || "baseline", noise: rf.noise ?? 0.0045, seed: rf.seed ?? 7 });
+  await add("recognitive-field", "Recognitive-field", "implemented", { advisory: true, scenario: rf.scenario || "baseline", start, ...probe });
+  steps[steps.length - 1].advisory = true;
+
+  // Celestial desktop agent: encode a command script, decode it, run it in an in-memory workspace.
+  const codec = await S.desktopCodec((input.desktop || {}).seed || "celestial-desktop-seed");
+  const script = `WRITE "${evidence[0].id}" TO "trace/evidence.txt"\nHASH "${evidence[0].content}"\nLIST FILES`;
+  const glyphs = codec.encode(script);
+  const decodedScript = codec.decode(glyphs);
+  const run = await S.desktopExecute(decodedScript, {});
+  const hashOk = run.transcript.includes(evidence[0].sha256);
+  let traversalBlocked = false;
+  try { S.resolveSafe("../outside.txt"); } catch { traversalBlocked = true; }
+  const dOk = decodedScript === script && hashOk && traversalBlocked;
+  await add("celestial-agent", "celestial_agent_desktop_upgrade", "implemented",
+    { glyph_script_sha256: await S.sha256Hex(glyphs), round_trip: decodedScript === script, hash_matches_evidence: hashOk, traversal_blocked: traversalBlocked, transcript: run.transcript }, dOk);
+
   for (const c of S.CONCEPT_STAGES) await add(c.id, c.repo, "concept", { label: c.label, note: c.note });
 
-  const blocking = steps.filter((s) => s.kind === "implemented" && !s.pass).map((s) => s.id);
+  const blocking = steps.filter((s) => s.kind === "implemented" && !s.advisory && !s.pass).map((s) => s.id);
   const receipt = {
     receipt_type: "claim-promotion-receipt/0.1-demo",
     claim_id: claim.id,

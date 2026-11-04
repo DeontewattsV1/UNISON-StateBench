@@ -1,6 +1,6 @@
 # UNISON — unified evidence, non-collapse and traceability
 
-UNISON is the research identity; **UNISON-StateBench** is its benchmark and the home repository for the consolidated work. This repository now gathers five related public repositories under `sources/` (imported with full git history) and references three private ones, and puts one documentation layer and one demonstrator over them:
+UNISON is the research identity; **UNISON-StateBench** is its benchmark and the home repository for the consolidated work. This repository now gathers eight related repositories under `sources/` (seven with full git history, one as a clean file copy), and puts one documentation layer and one demonstrator over them:
 
 | Layer | Where |
 |---|---|
@@ -26,9 +26,9 @@ Every repository contributes to a single pipeline that moves a claim from *unkno
 | Linguistic-Encryption-System-Celestial- | public | Policy packs, manifest verification, tamper testing, glyph encoding with one-time-pad transform; public copy of the PhaseForm runtime | `sources/Linguistic-Encryption-System-Celestial-/` |
 | SOVEREIGN-LATTICE-GOVCORE | public | Governance kernel: operating modes, policy rules, approval and escalation | `sources/SOVEREIGN-LATTICE-GOVCORE/` |
 | AISoulFrameworkConcepts | public | Concept document (framing only, no code) | `sources/AISoulFrameworkConcepts/` |
-| phaseform_runtime_package_v6 | **private** | Policy validation and event-to-action runtime. Not imported (see PROVENANCE.md); its core files are byte-identical to the public copies in Linguistic-Encryption-System-Celestial- | referenced only |
-| Recognitive-field | **private** | Recognition-field visual concept. Not imported | referenced only |
-| celestial_agent_desktop_upgrade | **private** | Desktop agent shell. Not imported | referenced only |
+| phaseform_runtime_package_v6 | private (imported with owner approval) | Policy validation and event-to-action runtime | `sources/phaseform_runtime_package_v6/` (file copy, see PROVENANCE.md) |
+| Recognitive-field | private (imported with owner approval) | Recognition-field visual dynamical model (attractor/turbulence probes) | `sources/Recognitive-field/` |
+| celestial_agent_desktop_upgrade | private (imported with owner approval) | Desktop agent: signed/encrypted agent spec packs, glyph codec, sandboxed workspace command runtime | `sources/celestial_agent_desktop_upgrade/` |
 
 ## Running things
 

@@ -43,7 +43,9 @@ All future experiments and artifacts fill in [`schemas/evidence-record.schema.js
 | Governance gate (operating mode, approval, escalation) | `govcore/governance/kernel.py` | SOVEREIGN-LATTICE-GOVCORE |
 | Policy validation, event → action runtime, manifest verification, tamper testing | `policy_schema.py`, `orchestrator.py`, `manifest_verifier.py`, `tamper_tester.py` | Linguistic-Encryption-System-Celestial- (and private phaseform_runtime_package_v6) |
 | Reversible encoding transform with round-trip check | `celestial_agent/celestial_language.py` | Linguistic-Encryption-System-Celestial- |
-| Framing concepts | documents / visualisations | AISoulFrameworkConcepts, Recognitive-field, celestial_agent_desktop_upgrade |
+| Advisory state-space visual (never evidence) | `recognitive-field-v3.html` field dynamics | Recognitive-field |
+| Encoded command transport and sandboxed execution | `celestial_core.py` | celestial_agent_desktop_upgrade |
+| Framing concepts | documents | AISoulFrameworkConcepts |
 
 ## 5. Promotion receipt (minimum content)
 
