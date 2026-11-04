@@ -1,222 +1,48 @@
-# UNISON-StateBench v0.1
+# UNISON — unified evidence, non-collapse and traceability
 
-> **Naming:** UNISON is the underlying research/framework identity. UNISON-StateBench is the public benchmark artifact and implementation.
+UNISON is the research identity; **UNISON-StateBench** is its benchmark and the home repository for the consolidated work. This repository now gathers five related public repositories under `sources/` (imported with full git history) and references three private ones, and puts one documentation layer and one demonstrator over them:
 
-UNISON-StateBench evaluates whether an AI system preserves explicitly defined invariants across representation changes, provenance/authority conflicts, missing evidence, and state transitions.
+| Layer | Where |
+|---|---|
+| Evidence framework (admissibility, promotion receipts, non-collapse) | [docs/ADMISSIBILITY.md](docs/ADMISSIBILITY.md) |
+| Claims register: what each imported method actually is | [docs/CLAIMS_REGISTER.md](docs/CLAIMS_REGISTER.md) |
+| Testable experiments derived from each repo | [docs/FUTURE_WORK.md](docs/FUTURE_WORK.md) |
+| Evidence-record JSON Schema | [schemas/evidence-record.schema.json](schemas/evidence-record.schema.json) |
+| Traceability playground (static, in-browser) | [playground/](playground/README.md) |
+| Provenance, commit SHAs, licenses, skipped material | [PROVENANCE.md](PROVENANCE.md) |
+| Original StateBench README (benchmark usage, Guardian) | [docs/STATEBENCH.md](docs/STATEBENCH.md) |
 
-## UNISON Guardian
+## One system, one rule
 
-The [Guardian application](guardian/README.md) is a separate, newly implemented hackathon sandbox for agent authority, delegated revocation, and inspectable evidence. Try the [live public demo](https://unison-guardian.info-ccehospitalitygroup.workers.dev), or run it from this checkout:
+Every repository contributes to a single pipeline that moves a claim from *unknown* towards *supported* only through explicit, hashed, receipted steps. The shared rule, from the UNISON non-collapse drafts: **no step may silently promote a state** — an observation is not evidence, evidence is not authorization, a local pass is not independent reproduction, and unknown never becomes known without a recorded transition.
 
-```bash
-cd guardian
-npm ci
-npm run dev
-```
+## Role of each repository
 
-Guardian requires Node.js 24 or newer. Its public demo uses synthetic actions and disables paid model requests. Guardian's new source is licensed under [Apache-2.0](guardian/LICENSE), with its own [NOTICE](guardian/NOTICE). The existing StateBench Python benchmark remains prior work under the repository's [MIT license](LICENSE); it is not presented as new hackathon functionality. See the [contribution disclosure](guardian/docs/HACKATHON.md) and [deployment guide](guardian/docs/DEPLOYMENT.md).
+| Repository | Visibility | Role in the unified system | Location |
+|---|---|---|---|
+| UNISON-StateBench | public | Core: typed invariants, deterministic oracle, state-collapse and non-collapse detection, benchmark corpus | repository root |
+| AGI-CP | public | Capability protocol: fail-closed gate, evidence windows, revocation, TRACT receipts | `sources/AGI-CP/` |
+| traceability-matrix | public | Requirements-traceability documents and an API/mockup scaffold; source of the requirement-to-evidence linking concept | `sources/traceability-matrix/` |
+| Linguistic-Encryption-System-Celestial- | public | Policy packs, manifest verification, tamper testing, glyph encoding with one-time-pad transform; public copy of the PhaseForm runtime | `sources/Linguistic-Encryption-System-Celestial-/` |
+| SOVEREIGN-LATTICE-GOVCORE | public | Governance kernel: operating modes, policy rules, approval and escalation | `sources/SOVEREIGN-LATTICE-GOVCORE/` |
+| AISoulFrameworkConcepts | public | Concept document (framing only, no code) | `sources/AISoulFrameworkConcepts/` |
+| phaseform_runtime_package_v6 | **private** | Policy validation and event-to-action runtime. Not imported (see PROVENANCE.md); its core files are byte-identical to the public copies in Linguistic-Encryption-System-Celestial- | referenced only |
+| Recognitive-field | **private** | Recognition-field visual concept. Not imported | referenced only |
+| celestial_agent_desktop_upgrade | **private** | Desktop agent shell. Not imported | referenced only |
 
-## Frozen constitutional core
-
-A canonical invariant is typed as:
-
-`I_k = (value, epistemic_status, provenance, authority)`
-
-UNISON keeps three properties distinct:
-
-- **Consistency**: outputs agree across representations.
-- **Correctness**: outputs agree with the deterministic oracle.
-- **State preservation**: outputs do not collapse distinct operational or epistemic states.
-
-The Non-Collapse Principle is first-class:
-
-`A -> B -> C` does **not** imply `A => C` unless required transition evidence exists.
-
-`False != Unknown` is enforced as an epistemic invariant.
-
-## Implemented gates
-
-### Gate 1 — canonical truth + oracle
-
-- immutable canonical models and typed epistemic state
-- strict canonical JSON loading that rejects duplicate keys and non-finite numeric values
-- provenance/authority/evidence/transition types
-- explicit evidence requirements for state transitions
-- unique transition IDs and order-independent decision-rule priorities
-- deterministic oracle derivation
-- state-collapse detection
-- canonical/oracle integrity hashing
-- S01 capability-authorization fixture
-- S06 energy-resilience-readiness fixture
-- non-collapse, schema-hardening, and integrity tests
-
-### Gate 2 — deterministic representation + guarded mutation
-
-Five deterministic renderers are implemented:
-
-- prose
-- JSON
-- dependency-free YAML
-- pipe table
-- event log
-
-Six presentation-only mutation families are implemented:
-
-- reorder
-- controlled paraphrase
-- contradiction injection
-- missing evidence
-- lower-authority conflict
-- adversarial value flip
-
-Every public renderer and mutation is wrapped by the integrity guard. The guard snapshots both the canonical case and its deterministic oracle before execution and verifies both again afterward, including when transform code raises an exception.
-
-Presentation views are additionally bound to their origin with `case_digest` and `oracle_digest`, preventing a view generated from one case from being rendered or mutated as though it belonged to another.
-
-## Constitutional invariant
-
-Renderer and mutation code may transform a detached **EvidenceView**. They may never mutate `CanonicalCase` or its deterministic oracle.
-
-Formally:
-
-`CanonicalOracle_before == CanonicalOracle_after(renderer/mutation)`
-
-A presentation mutation is **not** an oracle-changing experimental intervention. If a later U10 trial needs the reference truth itself to change, it must construct a separate validated canonical case and derive a separate oracle rather than rewriting the source case in place.
-
-## Example
-
-```python
-from benchmark.loaders import load_case
-from benchmark.presentation import build_evidence_view
-from benchmark.mutations import inject_authority_conflict
-from benchmark.renderers import render_json
-
-case = load_case("cases/S06_black_start_resilience.json")
-view = build_evidence_view(case)
-mutated = inject_authority_conflict(
-    case,
-    view,
-    invariant_id="I_REMEDIATION_VERIFIED",
-    lower_source_id="operator_summary",
-    conflicting_value=True,
-)
-artifact = render_json(case, mutated)
-print(artifact.content)
-```
-
-## Install and run
+## Running things
 
 ```bash
-python -m pip install -e '.[dev]'
-pytest
+# StateBench (unchanged)
+python -m pip install -e '.[dev]' && python -m pytest -q
+
+# Playground
+cd playground && npm test && npm run build && npm run smoke   # smoke needs Chrome
+python3 -m http.server -d dist 8000                           # then open http://localhost:8000
 ```
 
-## Gate 3 — deterministic scoring + trial generation
+The playground deploys to GitHub Pages via `.github/workflows/pages.yml` once merged to `main` and once Pages is enabled with the "GitHub Actions" source in repository settings.
 
-The pre-Kaggle evaluation layer is implemented before any U01–U10 task wrapper is allowed to depend on it.
+## License
 
-Deterministic primary metrics:
-
-• IPR — Invariant Preservation Rate: full-credit preservation requires value + epistemic status + provenance + authority.
-• RCR — Representation Correspondence Rate: pairwise semantic-output correspondence inside representation-equivalent trial groups.
-• CRR — Contradiction Recognition Rate.
-• FHR — False Harmonization Rate: missed contradiction plus adoption of a conflicting invariant/decision/action state.
-• CAL — Correct Abstention Level: missing evidence must remain UNKNOWN/ABSENT rather than collapsing to a guessed value.
-• PLR — Principal Leakage Rate using explicit forbidden-invariant canaries.
-• AIR — Authorization Integrity Risk from actions outside the deterministic authorized-action set.
-• SCR — State Collapse Rate from explicit workflow and epistemic boundaries.
-
-Trial generation is deterministic from:
-
-CanonicalCase × Representation × MutationPlan
-
-A trial expectation is separate from the immutable canonical oracle. This is essential for missing-evidence tests: removing presented evidence can make the justified observation UNKNOWN without rewriting canonical truth. The canonical case and canonical oracle hashes remain unchanged.
-
-The five representation values are prose, JSON, YAML, table, and event_log. MutationPlan is presentation-only and supports none, reorder, paraphrase, contradiction, missing evidence, authority conflict, and adversarial corruption. A truth-changing U10 intervention is deliberately not a MutationPlan; it must construct a separate validated CanonicalCase and derive a new oracle.
-
-The scoring path also treats presentation-induced UNKNOWN/ABSENT states as
-epistemic boundaries for SCR. A model does not escape State Collapse Rate merely
-because the canonical oracle knew a value before the trial intentionally removed
-the evidence needed to justify that value.
-
-## Gate 4 — Kaggle adapter + U01–U10 task wrappers
-
-Gate 4 keeps the frozen benchmark core provider-independent and adds a thin Kaggle
-execution surface:
-
-- `benchmark/kaggle_adapter.py` builds deterministic prompts, requests
-  `StructuredObservation` through Kaggle structured output, and normalizes results.
-- `benchmark/kaggle_runtime.py` isolates each trial in a fresh chat and maps the
-  deterministic score fields to human-readable Kaggle assertions.
-- `tasks/u01_*.py` through `tasks/u10_*.py` implement the ten suite wrappers in
-  Kaggle percent-format source files.
-- U07 uses synthetic principal-isolation canaries and checks both structured
-  invariant leakage and explicit canary leakage in serialized model output.
-- U08 makes the authoritative state available through a tool while injecting a
-  conflicting conversational assumption.
-- U09 separates evidence from the final decision request using deterministic,
-  provider-independent whitespace distance units. Published results should record
-  provider token counts separately when available rather than pretending one
-  tokenizer is universal.
-- U10 does not mutate truth in place. It compares S01 against a separately validated
-  write-authorized counterfactual case with its own deterministic oracle.
-
-## Gate 5 — frozen empirical execution
-
-The empirical layer is pinned to source commit
-`df10125d05f8271c613213851214ad8d37554363`.
-
-Before constructing or executing any trial, the freeze guard verifies Git blob identity
-for S01-S10, the frozen S01 U10 counterfactual, the corpus manifest, and the
-constitutional core. A changed protected byte fails closed.
-
-The deterministic v0.1 execution plan contains **162 model calls per model**:
-
-- U01: 50
-- U02: 10
-- U03: 10
-- U04: 10
-- U05: 10
-- U06: 10
-- U07: 10
-- U08: 10
-- U09: 40
-- U10: 2
-
-U10 remains scoped to the already-frozen S01 baseline/counterfactual pair. The
-empirical phase does not create new truth-changing cases after the source freeze.
-
-Raw structured observations are written to per-model append-only JSONL files and
-fsync'd after each record. A result manifest hashes those files after execution.
-Analysis computes the eight metrics separately, a 95% scenario-cluster percentile
-bootstrap (10,000 resamples by default), U09 distance curves, and failure topology
-across suite, scenario, representation, invariant component, and state-collapse kind.
-
-RCR is intentionally computed from U01 representation-equivalence trials rather than
-being contaminated by repeated U09 distance observations.
-
-Generate the plan:
-
-```bash
-python scripts/build_v01_matrix.py
-```
-
-Analyze complete result files:
-
-```bash
-python scripts/analyze_v01_results.py raw-results/*.jsonl
-```
-
-Exact Kaggle model identifiers are resolved and recorded at execution time from the
-runtime's available-model mapping. The runner refuses missing requested keys rather
-than silently substituting a different model.
-
-## Scientific boundary
-
-This repository supplies an executable evaluation artifact. It does not establish
-that a model understands truth in a general philosophical sense, does not establish
-arbitrary-agent containment or deployment safety, and does not combine
-IPR/RCR/CRR/FHR/CAL/PLR/AIR/SCR into a single composite score.
-
-The frozen empirical source and execution notes are under `releases/` and
-`experiments/v0.1/`.
+Repository root: MIT (see [LICENSE](LICENSE)). `guardian/` new source: Apache-2.0. Each directory under `sources/` keeps its own LICENSE; see [PROVENANCE.md](PROVENANCE.md) for the license review.

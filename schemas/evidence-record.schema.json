@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DeontewattsV1/UNISON-StateBench/schemas/evidence-record.schema.json",
+  "title": "UNISON evidence record",
+  "description": "Record every experiment or artifact must fill in. Integrity (hashes), schema validity, admissibility and truth are distinct properties; this record carries the first and supports evaluating the others.",
+  "type": "object",
+  "required": ["schema_version", "record_id", "claim", "status", "method", "inputs_hash", "outputs_hash", "code_commit", "promotion_receipt"],
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "status": { "enum": ["concept", "defined", "implemented", "locally_tested", "preregistered", "measured", "independently_reproduced", "replicated", "security_tested", "release_eligible", "refuted", "withdrawn"] }
+  },
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "record_id": { "type": "string", "minLength": 1 },
+    "claim": {
+      "type": "object",
+      "required": ["id", "statement", "claim_class"],
+      "properties": {
+        "id": { "type": "string" },
+        "statement": { "type": "string", "minLength": 1 },
+        "claim_class": { "enum": ["definition", "implemented_with_tests", "implemented_without_tests", "hypothesis", "empirical_result"] },
+        "falsification_criterion": { "type": "string" },
+        "uncertainty": { "type": "string" },
+        "novelty": { "type": "string", "default": "not assessed against prior work" },
+        "source_repo": { "type": "string" }
+      }
+    },
+    "status": { "$ref": "#/$defs/status" },
+    "method": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "preregistration_ref": { "type": "string" },
+        "procedure_ref": { "type": "string" },
+        "seed": { "type": ["integer", "string"] }
+      }
+    },
+    "inputs_hash": { "$ref": "#/$defs/sha256" },
+    "outputs_hash": { "$ref": "#/$defs/sha256" },
+    "data_location": { "type": "string", "description": "Required when claim_class is empirical_result." },
+    "code_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "promotion_receipt": {
+      "type": "object",
+      "required": ["claim_id", "from_status", "to_status", "transition", "checks", "issued_at", "issuer"],
+      "properties": {
+        "claim_id": { "type": "string" },
+        "from_status": { "$ref": "#/$defs/status" },
+        "to_status": { "$ref": "#/$defs/status" },
+        "transition": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "$ref": "#/$defs/sha256" } },
+        "checks": { "type": "array", "items": { "type": "object", "required": ["id", "pass"], "properties": { "id": { "type": "string" }, "pass": { "type": "boolean" } } } },
+        "blocking_steps": { "type": "array", "items": { "type": "string" } },
+        "chain_head": { "$ref": "#/$defs/sha256" },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "issuer": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "claim": { "properties": { "claim_class": { "const": "empirical_result" } } } } },
+      "then": { "required": ["data_location"] } }
+  ]
+}
