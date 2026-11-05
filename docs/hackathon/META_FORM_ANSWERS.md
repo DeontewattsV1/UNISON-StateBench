@@ -56,9 +56,9 @@ https://unison-guardian.info-ccehospitalitygroup.workers.dev
 
 **3-Minute Demo Video**
 ```text
-[PASTE YOUR ACCESSIBLE VIDEO URL]
+https://github.com/DeontewattsV1/UNISON-StateBench/releases/download/hackathon-demo-2026-11-04/UNISON-Guardian-demo.mp4
 ```
-> Note: this URL will be filled in once the demo video is hosted at an accessible link.
+> Video notes: see below.
 
 **Describe your use of Meta products to build the submitted project**
 ```text
@@ -89,6 +89,13 @@ Keeping authority and evidence boundaries explicit across a growing system. Queu
 ```text
 The submitted repository contains no controlled cross-model evaluation or retained successful Meta inference, so it does not support a comparative performance claim. Current verification covers deterministic workflows and adapter behavior under mocked responses.
 ```
+
+## Demo video notes
+- Video: https://github.com/DeontewattsV1/UNISON-StateBench/releases/download/hackathon-demo-2026-11-04/UNISON-Guardian-demo.mp4
+- Release page: https://github.com/DeontewattsV1/UNISON-StateBench/releases/tag/hackathon-demo-2026-11-04
+- Duration ~97 seconds (under 3 minutes); silent screen capture of the public Worker.
+- Branch B: Ask Muse showed live analysis disabled; no live Meta inference claimed.
+- Demo observed: Queued delegation PASS, Alternate path FAIL, Incomplete inventory UNKNOWN, HATS lab Pass 11/11 including ANCESTOR_REVOKED on stale Nano — so the live Worker does include HATS for this recording.
 
 ---
 
