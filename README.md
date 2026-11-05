@@ -43,6 +43,10 @@ python3 -m http.server -d dist 8000                           # then open http:/
 
 The playground deploys to GitHub Pages via `.github/workflows/pages.yml` once merged to `main` and once Pages is enabled with the "GitHub Actions" source in repository settings.
 
+## Hackathon submission
+
+Meta Global AI Developer Hackathon package: [docs/hackathon/](docs/hackathon/).
+
 ## License
 
 Repository root: MIT (see [LICENSE](LICENSE)). `guardian/` new source: Apache-2.0. Each directory under `sources/` keeps its own LICENSE; see [PROVENANCE.md](PROVENANCE.md) for the license review.
