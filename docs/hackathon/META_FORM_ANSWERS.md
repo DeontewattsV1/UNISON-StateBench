@@ -93,7 +93,8 @@ The submitted repository contains no controlled cross-model evaluation or retain
 ## Demo video notes
 - Video: https://github.com/DeontewattsV1/UNISON-StateBench/releases/download/hackathon-demo-2026-11-04/UNISON-Guardian-demo.mp4
 - Release page: https://github.com/DeontewattsV1/UNISON-StateBench/releases/tag/hackathon-demo-2026-11-04
-- Duration ~97 seconds (under 3 minutes); silent screen capture of the public Worker.
+- Also available as: https://github.com/DeontewattsV1/UNISON-StateBench/releases/download/hackathon-demo-2026-11-04/UNISON-Guardian-demo-3min.mp4
+- Duration exactly 3:00 (180 seconds); full narrated screen capture of the public Worker with spoken narration (Branch B: Muse disabled / live Meta inference pending).
 - Branch B: Ask Muse showed live analysis disabled; no live Meta inference claimed.
 - Demo observed: Queued delegation PASS, Alternate path FAIL, Incomplete inventory UNKNOWN, HATS lab Pass 11/11 including ANCESTOR_REVOKED on stale Nano — so the live Worker does include HATS for this recording.
 
