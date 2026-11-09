@@ -1,6 +1,8 @@
 name: Deploy playground to GitHub Pages
 
 on:
+  pull_request:
+    paths: ["playground/**", ".github/workflows/pages.yml"]
   push:
     branches: [main]
     paths: ["playground/**", ".github/workflows/pages.yml"]
@@ -16,7 +18,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check whether GitHub Pages is enabled
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          body=$(gh api "repos/${GITHUB_REPOSITORY}/pages" 2>&1)
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is enabled. The playground will be published." >> "$GITHUB_STEP_SUMMARY"
+          elif printf '%s\n' "$body" | grep -q 'Not Found'; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "GitHub Pages is not enabled for this repository, so this deploy is skipped."
+              echo "Playground tests still run in the Playground and evidence schema workflow."
+              echo "To publish, enable Pages and set the source to GitHub Actions."
+            } | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            printf '%s\n' "$body" >&2
+            exit "$status"
+          fi
+
   build:
+    needs: detect
+    if: needs.detect.outputs.enabled == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +62,10 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: playground/dist
+
   deploy:
-    needs: build
+    needs: [detect, build]
+    if: needs.detect.outputs.enabled == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
