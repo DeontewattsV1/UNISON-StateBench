@@ -41,7 +41,7 @@ cd playground && npm test && npm run build && npm run smoke   # smoke needs Chro
 python3 -m http.server -d dist 8000                           # then open http://localhost:8000
 ```
 
-The playground deploys to GitHub Pages via `.github/workflows/pages.yml` once merged to `main` and once Pages is enabled with the "GitHub Actions" source in repository settings.
+The playground publishes through `.github/workflows/pages.yml` when GitHub Pages is enabled with the GitHub Actions source. Until that setting is on, the workflow reports the skip and exits successfully. Playground tests still run in the Playground and evidence schema workflow.
 
 ## Hackathon submission
 
