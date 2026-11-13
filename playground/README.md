@@ -23,3 +23,13 @@ npm test          # unit tests (node:test, no dependencies)
 npm run build     # copies to dist/
 npm run smoke     # serves dist/ and loads it in headless Chrome (CHROME_BIN to override)
 ```
+
+## Lattice
+
+`lattice/` is the source of the in-browser lattice demonstrator (claim token, twelve stations, pressures, tamper). Stage functions match `src/stages.js`. Unit tests:
+
+```bash
+node --experimental-strip-types --test lattice/trace/stages.test.ts
+```
+
+The visual shell is the UNISON Trace app. This directory is the versioned source, not a second static site.

@@ -9,6 +9,7 @@ UNISON is the research identity; **UNISON-StateBench** is its benchmark and the 
 | Testable experiments derived from each repo | [docs/FUTURE_WORK.md](docs/FUTURE_WORK.md) |
 | Evidence-record JSON Schema | [schemas/evidence-record.schema.json](schemas/evidence-record.schema.json) |
 | Traceability playground (static, in-browser) | [playground/](playground/README.md) |
+| Trace lattice (claim token, twelve stations) | [playground/lattice/](playground/lattice/README.md) |
 | Provenance, commit SHAs, licenses, skipped material | [PROVENANCE.md](PROVENANCE.md) |
 | Original StateBench README (benchmark usage, Guardian) | [docs/STATEBENCH.md](docs/STATEBENCH.md) |
 
