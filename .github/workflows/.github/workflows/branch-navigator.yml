@@ -1,0 +1,130 @@
+
+name: Branch Navigator & Greenkeeper
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Audit first, then operate on one branch"
+        type: choice
+        required: true
+        default: audit
+        options:
+          - audit
+          - open-pr
+          - sync
+          - merge
+          - cleanup
+
+      head:
+        description: "Source branch from audit"
+        type: string
+        required: false
+
+      base:
+        description: "Destination branch"
+        type: string
+        required: false
+
+      pr_number:
+        description: "PR number, required for cleanup"
+        type: string
+        required: false
+
+      expected_head_sha:
+        description: "Exact SHA from branch audit"
+        type: string
+        required: false
+
+      merge_method:
+        description: "Merge method"
+        type: choice
+        required: true
+        default: squash
+        options:
+          - squash
+          - merge
+          - rebase
+
+      confirmation:
+        description: "Example: MERGE feature -> main"
+        type: string
+        required: false
+
+  schedule:
+    - cron: "17 8 * * 1"
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: branch-navigator-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: >-
+      (github.event_name == 'schedule' ||
+       inputs.operation == 'audit') &&
+      github.ref_name == github.event.repository.default_branch
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Highlight next branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BN_OPERATION: audit
+          BN_BASE: ${{ inputs.base || '' }}
+        run: python3 .github/scripts/branch_navigator.py
+
+  operate:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.operation != 'audit' &&
+      github.ref_name == github.event.repository.default_branch
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    environment: branch-change-approval
+
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Perform approved branch operation
+        env:
+          GH_TOKEN: ${{ secrets.BRANCH_MANAGER_TOKEN }}
+          BN_MUTATIONS_ENABLED: "yes"
+          BN_OPERATION: ${{ inputs.operation }}
+          BN_HEAD: ${{ inputs.head }}
+          BN_BASE: ${{ inputs.base }}
+          BN_PR_NUMBER: ${{ inputs.pr_number }}
+          BN_EXPECTED_SHA: ${{ inputs.expected_head_sha }}
+          BN_MERGE_METHOD: ${{ inputs.merge_method }}
+          BN_CONFIRMATION: ${{ inputs.confirmation }}
+        run: python3 .github/scripts/branch_navigator.py
+
+      - name: Refresh branch rankings
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BN_OPERATION: audit
+          BN_BASE: ${{ inputs.base }}
+        run: python3 .github/scripts/branch_navigator.py
