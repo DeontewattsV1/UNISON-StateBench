@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.4",
+  "creator": "TDD",
+  "public_key_b64": "iX15CSOFgpJxqYhxX2JaqWENe993CoX9mi7tFJaTt4s=",
+  "spec_hash_sha256": "0c92b2c20a1b7e8b1a475206948a1ed1056bea43a3465a724447f3c524001d6e",
+  "ciphertext_hash_sha256": "cbbb18603ebc8ac54ba2c746f5304b51d8e54e67be92dd3cf6cf8a5faba106b1",
+  "content_type": "agent_spec",
+  "nonce_b64": "OdPyjazln7XhjLpl",
+  "salt_b64": "tAXF1tJd3FwwIgpx2/eExg=="
+}

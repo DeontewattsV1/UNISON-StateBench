@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "unison-guardian",
+  "main": ".release/worker.mjs",
+  "compatibility_date": "2026-10-29",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "durable_objects": {
+    "bindings": [{ "name": "GUARDIAN_SESSIONS", "class_name": "GuardianSession" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GuardianSession"] }],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "logs": { "enabled": true, "invocation_logs": false }
+  },
+  "build": { "command": "npm run build:worker" }
+}

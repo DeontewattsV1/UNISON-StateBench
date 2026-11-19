@@ -1,0 +1,10 @@
+{
+  "name": "unison-traceability-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/stages.test.js",
+    "build": "rm -rf dist && mkdir -p dist && cp -r index.html src dist/",
+    "smoke": "node tests/smoke.mjs dist"
+  }
+}

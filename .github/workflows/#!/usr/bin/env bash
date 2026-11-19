@@ -1,0 +1,22 @@
+# Non-destructive local install. Does not commit, push, merge or modify rules.
+set -euo pipefail
+if [[ $# -ne 1 ]]; then
+  echo "Usage: bash install.sh /path/to/local-git-repository" >&2
+  exit 2
+fi
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+target="$(cd "$1" && pwd)"
+if [[ ! -d "$target/.git" && ! -f "$target/.git" ]]; then
+  echo "Target is not a local Git checkout: $target" >&2
+  exit 2
+fi
+for rel in .github/workflows/branch-navigator.yml .github/scripts/branch_navigator.py; do
+  if [[ -e "$target/$rel" ]]; then
+    echo "Refusing to overwrite $target/$rel" >&2
+    exit 3
+  fi
+done
+mkdir -p "$target/.github/workflows" "$target/.github/scripts"
+cp "$root/.github/workflows/branch-navigator.yml" "$target/.github/workflows/branch-navigator.yml"
+cp "$root/.github/scripts/branch_navigator.py" "$target/.github/scripts/branch_navigator.py"
+echo "Copied files into $target. Review git diff/status and open a normal PR. No commit or push performed."
