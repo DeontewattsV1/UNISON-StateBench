@@ -1,0 +1,86 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "M05",
+  "domain": "integrated_market_reasoning",
+  "title": "Signal, strategic response, price impact, and execution costs remain distinct states",
+  "canonical_state": {
+    "candidate_signal_present": true,
+    "alpha_validated": null,
+    "equilibrium_established": null,
+    "price_impact_calibrated": null,
+    "net_edge_validated": null
+  },
+  "invariants": [
+    {
+      "id": "I_CANDIDATE_SIGNAL_PRESENT",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["signal_illustration"],
+      "authority": {"source_id": "signal_illustration", "minimum_rank": 20, "trusted_required": false},
+      "required": true,
+      "description": "A candidate signal is illustrated."
+    },
+    {
+      "id": "I_ALPHA_VALIDATED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["empirical_validation"],
+      "authority": {"source_id": "empirical_validation", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Benchmark-adjusted alpha remains unvalidated."
+    },
+    {
+      "id": "I_EQUILIBRIUM_ESTABLISHED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["game_verification"],
+      "authority": {"source_id": "game_verification", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Strategic equilibrium remains unverified."
+    },
+    {
+      "id": "I_PRICE_IMPACT_CALIBRATED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["market_calibration"],
+      "authority": {"source_id": "market_calibration", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Price impact remains model-conditional and uncalibrated for the target setting."
+    },
+    {
+      "id": "I_NET_EDGE_VALIDATED",
+      "value": null,
+      "epistemic_status": "unknown",
+      "provenance": ["net_edge_validation"],
+      "authority": {"source_id": "net_edge_validation", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "No net strategy edge is established after impact, spread, fees, and risk."
+    }
+  ],
+  "sources": [
+    {"id": "signal_illustration", "authority_rank": 20, "trusted": false, "kind": "conceptual_illustration", "description": "Illustrative signal/noise view.", "source_derived": false},
+    {"id": "empirical_validation", "authority_rank": 100, "trusted": true, "kind": "alpha_validation", "description": "Required benchmark/risk-model and out-of-sample evidence.", "source_derived": false},
+    {"id": "game_verification", "authority_rank": 100, "trusted": true, "kind": "best_response_verification", "description": "Required strategic best-response evidence.", "source_derived": false},
+    {"id": "market_calibration", "authority_rank": 100, "trusted": true, "kind": "microstructure_calibration", "description": "Required target-market calibration.", "source_derived": false},
+    {"id": "net_edge_validation", "authority_rank": 100, "trusted": true, "kind": "net_performance_validation", "description": "Required net-of-cost, risk-adjusted validation.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_ALPHA_VALIDATION", "source_id": "empirical_validation", "present": false, "supports_transition": false, "description": "No alpha validation evidence."},
+    {"id": "E_GAME_VERIFICATION", "source_id": "game_verification", "present": false, "supports_transition": false, "description": "No complete equilibrium verification evidence."},
+    {"id": "E_MARKET_CALIBRATION", "source_id": "market_calibration", "present": false, "supports_transition": false, "description": "No target-market price-impact calibration evidence."},
+    {"id": "E_NET_EDGE_VALIDATION", "source_id": "net_edge_validation", "present": false, "supports_transition": false, "description": "No net-of-cost empirical validation evidence."}
+  ],
+  "transitions": [
+    {"id": "T_SIGNAL_TO_ALPHA", "from_invariant": "I_CANDIDATE_SIGNAL_PRESENT", "to_invariant": "I_ALPHA_VALIDATED", "required_evidence": ["E_ALPHA_VALIDATION"], "observed": false, "minimum_authority_rank": 100, "description": "Candidate signal does not imply alpha."},
+    {"id": "T_ALPHA_TO_EQUILIBRIUM", "from_invariant": "I_ALPHA_VALIDATED", "to_invariant": "I_EQUILIBRIUM_ESTABLISHED", "required_evidence": ["E_GAME_VERIFICATION"], "observed": false, "minimum_authority_rank": 100, "description": "An informational edge does not itself establish strategic equilibrium."},
+    {"id": "T_EQUILIBRIUM_TO_CALIBRATED_IMPACT", "from_invariant": "I_EQUILIBRIUM_ESTABLISHED", "to_invariant": "I_PRICE_IMPACT_CALIBRATED", "required_evidence": ["E_MARKET_CALIBRATION"], "observed": false, "minimum_authority_rank": 100, "description": "A strategic model does not imply calibrated market impact."},
+    {"id": "T_IMPACT_TO_NET_EDGE", "from_invariant": "I_PRICE_IMPACT_CALIBRATED", "to_invariant": "I_NET_EDGE_VALIDATED", "required_evidence": ["E_NET_EDGE_VALIDATION"], "observed": false, "minimum_authority_rank": 100, "description": "Price-impact calibration does not imply a validated net strategy edge."}
+  ],
+  "decision_rules": [
+    {"id": "STRATEGY_NOT_ESTABLISHED", "priority": 10, "conditions": [{"invariant_id": "I_NET_EDGE_VALIDATED", "value": null, "epistemic_status": "unknown"}], "decision": "strategy_not_established", "authorized_actions": []}
+  ],
+  "notes": [
+    "The scenario intentionally does not recommend a trade.",
+    "The benchmark target is preservation of conditionality and operational state."
+  ]
+}

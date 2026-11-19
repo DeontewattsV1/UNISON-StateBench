@@ -11,12 +11,20 @@ sorted tuples of frozen records during validation.
 from __future__ import annotations
 
 from enum import Enum
+from math import isfinite
 from typing import Annotated, Literal, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 JsonScalar: TypeAlias = bool | int | float | str | None
+
+
+def _validate_finite_scalar(value: JsonScalar, *, label: str) -> JsonScalar:
+    """Reject NaN/Infinity so canonical serialization and hashes stay portable."""
+    if isinstance(value, float) and not isfinite(value):
+        raise ValueError(f"{label} must be a finite JSON scalar")
+    return value
 
 
 class FrozenModel(BaseModel):
@@ -42,6 +50,11 @@ class EpistemicStatus(str, Enum):
 class CanonicalStateEntry(FrozenModel):
     key: str
     value: JsonScalar
+
+    @field_validator("value")
+    @classmethod
+    def finite_value(cls, value: JsonScalar) -> JsonScalar:
+        return _validate_finite_scalar(value, label="Canonical state value")
 
 
 class SourceRecord(FrozenModel):
@@ -80,6 +93,11 @@ class CanonicalInvariant(FrozenModel):
     required: bool = True
     description: str | None = None
 
+    @field_validator("value")
+    @classmethod
+    def finite_value(cls, value: JsonScalar) -> JsonScalar:
+        return _validate_finite_scalar(value, label="Invariant value")
+
     @model_validator(mode="after")
     def validate_epistemic_value(self) -> "CanonicalInvariant":
         if self.epistemic_status in {EpistemicStatus.UNKNOWN, EpistemicStatus.ABSENT}:
@@ -101,10 +119,16 @@ class TransitionRequirement(FrozenModel):
     id: str
     from_invariant: str
     to_invariant: str
-    required_evidence: tuple[str, ...] = ()
+    required_evidence: Annotated[tuple[str, ...], Field(min_length=1)]
     observed: bool = False
     minimum_authority_rank: Annotated[int, Field(ge=0)] = 0
     description: str | None = None
+
+    @model_validator(mode="after")
+    def validate_boundary(self) -> "TransitionRequirement":
+        if self.from_invariant == self.to_invariant:
+            raise ValueError("Transition boundary must connect two distinct invariants")
+        return self
 
 
 class RuleCondition(FrozenModel):
@@ -112,13 +136,18 @@ class RuleCondition(FrozenModel):
     value: JsonScalar = None
     epistemic_status: EpistemicStatus | None = None
 
+    @field_validator("value")
+    @classmethod
+    def finite_value(cls, value: JsonScalar) -> JsonScalar:
+        return _validate_finite_scalar(value, label="Decision-rule condition value")
+
 
 class DecisionRule(FrozenModel):
     """Declarative deterministic decision rule, evaluated in priority order."""
 
     id: str
     priority: int = 100
-    conditions: tuple[RuleCondition, ...]
+    conditions: Annotated[tuple[RuleCondition, ...], Field(min_length=1)]
     decision: str
     authorized_actions: tuple[str, ...] = ()
 
@@ -128,12 +157,12 @@ class CanonicalCase(FrozenModel):
     scenario_id: str
     domain: str
     title: str
-    canonical_state: tuple[CanonicalStateEntry, ...]
-    invariants: tuple[CanonicalInvariant, ...]
-    sources: tuple[SourceRecord, ...]
+    canonical_state: Annotated[tuple[CanonicalStateEntry, ...], Field(min_length=1)]
+    invariants: Annotated[tuple[CanonicalInvariant, ...], Field(min_length=1)]
+    sources: Annotated[tuple[SourceRecord, ...], Field(min_length=1)]
     evidence: tuple[EvidenceRecord, ...] = ()
     transitions: tuple[TransitionRequirement, ...] = ()
-    decision_rules: tuple[DecisionRule, ...]
+    decision_rules: Annotated[tuple[DecisionRule, ...], Field(min_length=1)]
     notes: tuple[str, ...] = ()
 
     @field_validator("canonical_state", mode="before")
@@ -161,8 +190,22 @@ class CanonicalCase(FrozenModel):
         if len(evidence_ids) != len(self.evidence):
             raise ValueError("Evidence IDs must be unique")
 
+        transition_ids = {t.id for t in self.transitions}
+        if len(transition_ids) != len(self.transitions):
+            raise ValueError("Transition IDs must be unique")
+
+        decision_rule_ids = {rule.id for rule in self.decision_rules}
+        if len(decision_rule_ids) != len(self.decision_rules):
+            raise ValueError("Decision rule IDs must be unique")
+
+        decision_priorities = {rule.priority for rule in self.decision_rules}
+        if len(decision_priorities) != len(self.decision_rules):
+            raise ValueError(
+                "Decision-rule priorities must be unique to avoid order-dependent oracle selection"
+            )
+
         for invariant in self.invariants:
-            authority_source = source_ids and invariant.authority.source_id
+            authority_source = invariant.authority.source_id
             if authority_source not in source_ids:
                 raise ValueError(
                     f"Invariant {invariant.id} authority source "
@@ -237,6 +280,11 @@ class OracleInvariant(FrozenModel):
     provenance: tuple[str, ...]
     authority: AuthorityBinding
 
+    @field_validator("value")
+    @classmethod
+    def finite_value(cls, value: JsonScalar) -> JsonScalar:
+        return _validate_finite_scalar(value, label="Oracle invariant value")
+
 
 class OracleTransitionState(FrozenModel):
     id: str
@@ -263,6 +311,11 @@ class InvariantObservation(FrozenModel):
     epistemic_status: EpistemicStatus
     provenance: tuple[str, ...] = ()
     authority_source: str | None = None
+
+    @field_validator("value")
+    @classmethod
+    def finite_value(cls, value: JsonScalar) -> JsonScalar:
+        return _validate_finite_scalar(value, label="Observed invariant value")
 
     @model_validator(mode="after")
     def validate_epistemic_value(self) -> "InvariantObservation":

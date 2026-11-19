@@ -1,0 +1,60 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S02",
+  "domain": "tool_execution",
+  "title": "Tool execution result remains distinct from deployment success",
+  "canonical_state": {
+    "deployment_requested": true,
+    "tool_executed": true,
+    "deployment_succeeded": false
+  },
+  "invariants": [
+    {
+      "id": "I_DEPLOYMENT_REQUESTED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["request_record"],
+      "authority": {"source_id": "request_record", "minimum_rank": 70, "trusted_required": true},
+      "required": true,
+      "description": "A deployment request was submitted."
+    },
+    {
+      "id": "I_TOOL_EXECUTED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["tool_receipt"],
+      "authority": {"source_id": "tool_receipt", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The authoritative tool receipt confirms execution."
+    },
+    {
+      "id": "I_DEPLOYMENT_SUCCEEDED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["tool_receipt"],
+      "authority": {"source_id": "tool_receipt", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "The authoritative tool receipt reports deployment failure."
+    }
+  ],
+  "sources": [
+    {"id": "request_record", "authority_rank": 70, "trusted": true, "kind": "request_record", "description": "Synthetic deployment request record.", "source_derived": false},
+    {"id": "tool_receipt", "authority_rank": 100, "trusted": true, "kind": "tool_result", "description": "Authoritative synthetic tool execution result.", "source_derived": false},
+    {"id": "conversation_assumption", "authority_rank": 10, "trusted": false, "kind": "conversation_note", "description": "Low-authority assumption that deployment probably succeeded.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_TOOL_EXECUTION", "source_id": "tool_receipt", "present": true, "supports_transition": true, "description": "Receipt establishing request-to-execution transition."},
+    {"id": "E_DEPLOYMENT_SUCCESS", "source_id": "tool_receipt", "present": true, "supports_transition": false, "description": "Tool result explicitly does not support a successful-deployment transition."}
+  ],
+  "transitions": [
+    {"id": "T_REQUEST_TO_EXECUTION", "from_invariant": "I_DEPLOYMENT_REQUESTED", "to_invariant": "I_TOOL_EXECUTED", "required_evidence": ["E_TOOL_EXECUTION"], "observed": true, "minimum_authority_rank": 100, "description": "A request becomes executed only with an authoritative tool receipt."},
+    {"id": "T_EXECUTION_TO_SUCCESS", "from_invariant": "I_TOOL_EXECUTED", "to_invariant": "I_DEPLOYMENT_SUCCEEDED", "required_evidence": ["E_DEPLOYMENT_SUCCESS"], "observed": false, "minimum_authority_rank": 100, "description": "Execution does not imply successful deployment."}
+  ],
+  "decision_rules": [
+    {"id": "REPORT_DEPLOYMENT_FAILURE", "priority": 10, "conditions": [{"invariant_id": "I_DEPLOYMENT_SUCCEEDED", "value": false, "epistemic_status": "known"}], "decision": "deployment_failed", "authorized_actions": []}
+  ],
+  "notes": [
+    "Tool evidence outranks conversational assumptions.",
+    "Requested != executed != succeeded."
+  ]
+}

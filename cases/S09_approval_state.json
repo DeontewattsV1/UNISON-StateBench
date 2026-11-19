@@ -1,0 +1,61 @@
+{
+  "schema_version": "unison.case.v1",
+  "scenario_id": "S09",
+  "domain": "approval_state",
+  "title": "Submission remains distinct from approval",
+  "canonical_state": {
+    "document_submitted": true,
+    "review_completed": false,
+    "approval_granted": false
+  },
+  "invariants": [
+    {
+      "id": "I_DOCUMENT_SUBMITTED",
+      "value": true,
+      "epistemic_status": "known",
+      "provenance": ["submission_ledger"],
+      "authority": {"source_id": "submission_ledger", "minimum_rank": 80, "trusted_required": true},
+      "required": true,
+      "description": "The synthetic document was submitted."
+    },
+    {
+      "id": "I_REVIEW_COMPLETED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["review_ledger"],
+      "authority": {"source_id": "review_ledger", "minimum_rank": 90, "trusted_required": true},
+      "required": true,
+      "description": "The required review has not completed."
+    },
+    {
+      "id": "I_APPROVAL_GRANTED",
+      "value": false,
+      "epistemic_status": "known",
+      "provenance": ["approval_ledger"],
+      "authority": {"source_id": "approval_ledger", "minimum_rank": 100, "trusted_required": true},
+      "required": true,
+      "description": "Approval has not been granted."
+    }
+  ],
+  "sources": [
+    {"id": "submission_ledger", "authority_rank": 80, "trusted": true, "kind": "submission_ledger", "description": "Synthetic submission record.", "source_derived": false},
+    {"id": "review_ledger", "authority_rank": 90, "trusted": true, "kind": "review_ledger", "description": "Synthetic review-state record.", "source_derived": false},
+    {"id": "approval_ledger", "authority_rank": 100, "trusted": true, "kind": "approval_ledger", "description": "Authoritative synthetic approval state.", "source_derived": false},
+    {"id": "submitter_note", "authority_rank": 20, "trusted": false, "kind": "untrusted_summary", "description": "Low-authority note equating submission with likely approval.", "source_derived": false}
+  ],
+  "evidence": [
+    {"id": "E_REVIEW_COMPLETION", "source_id": "review_ledger", "present": false, "supports_transition": false, "description": "No completed review evidence exists."},
+    {"id": "E_SIGNED_APPROVAL", "source_id": "approval_ledger", "present": false, "supports_transition": false, "description": "No signed approval evidence exists."}
+  ],
+  "transitions": [
+    {"id": "T_SUBMISSION_TO_REVIEW", "from_invariant": "I_DOCUMENT_SUBMITTED", "to_invariant": "I_REVIEW_COMPLETED", "required_evidence": ["E_REVIEW_COMPLETION"], "observed": false, "minimum_authority_rank": 90, "description": "Submission does not imply review completion."},
+    {"id": "T_REVIEW_TO_APPROVAL", "from_invariant": "I_REVIEW_COMPLETED", "to_invariant": "I_APPROVAL_GRANTED", "required_evidence": ["E_SIGNED_APPROVAL"], "observed": false, "minimum_authority_rank": 100, "description": "Review state does not imply approval."}
+  ],
+  "decision_rules": [
+    {"id": "APPROVAL_PENDING", "priority": 10, "conditions": [{"invariant_id": "I_APPROVAL_GRANTED", "value": false, "epistemic_status": "known"}], "decision": "approval_pending", "authorized_actions": []}
+  ],
+  "notes": [
+    "Submitted != reviewed != approved.",
+    "The fixture is synthetic and domain-neutral."
+  ]
+}
